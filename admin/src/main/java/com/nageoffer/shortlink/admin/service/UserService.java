@@ -18,7 +18,7 @@ public interface UserService extends IService<UserDo> {
     /**
      * 查询用户名是否存在
      * @param username 用户名
-     * @return 存在返回false,不存在返回true
+     * @return 存在返回true,不存在返回false
      */
     Boolean hasUsername(String username);
 

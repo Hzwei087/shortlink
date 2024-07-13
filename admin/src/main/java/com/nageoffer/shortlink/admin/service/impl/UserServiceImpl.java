@@ -46,34 +46,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements 
 
     @Override
     public Boolean hasUsername(String username) {
-//        LambdaQueryWrapper<UserDo> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-//        lambdaQueryWrapper.eq(UserDo::getUsername,username);
-//        UserDo userDo = this.getOne(lambdaQueryWrapper);
-//        return null == userDo;
-        return !userRegisterCachePenetrationBloomFilter.contains(username);
+        return userRegisterCachePenetrationBloomFilter.contains(username);
     }
 
     @Override
     public void register(UserRegisterReqDTO requestParam) {
-        if (!hasUsername(requestParam.getUsername())) {
+        boolean hasUserName = hasUsername(requestParam.getUsername());
+        if (hasUserName) {
             throw new ClientException(USER_NAME_EXIST);
         }
         RLock lock = redissonClient.getLock(LOCK_USER_REGISTER_KEY + requestParam.getUsername());
         try {
             if (lock.tryLock()) {
-
-
                 int insert = baseMapper.insert(BeanUtil.toBean(requestParam, UserDo.class));
                 if (insert < 1) {
                     throw new ClientException(UserErrorCodeEnum.USER_SAVE_ERROR);
                 }
                 userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
+                return;
+                //退出try方法
             }
             throw new ClientException(USER_NAME_EXIST);
         } finally {
             lock.unlock();
         }
-
-
     }
 }
