@@ -11,9 +11,14 @@ import com.nageoffer.shortlink.admin.dto.req.UserRegisterReqDTO;
 import com.nageoffer.shortlink.admin.dto.resp.UserRespDTO;
 import com.nageoffer.shortlink.admin.service.UserService;
 import org.redisson.api.RBloomFilter;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import static com.nageoffer.shortlink.admin.common.constant.RedisCacheConstant.LOCK_USER_REGISTER_KEY;
+import static com.nageoffer.shortlink.admin.common.enums.UserErrorCodeEnum.USER_NAME_EXIST;
 
 /**
  * 用户接口实现层
@@ -22,6 +27,8 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements UserService {
     @Autowired
     private RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
+    @Autowired
+    private RedissonClient redissonClient;
 
     @Override
     public UserRespDTO getUserByUsername(String username) {
@@ -35,8 +42,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements 
         }else {
             throw new ClientException(UserErrorCodeEnum.USER_NULL);
         }
-
-
     }
 
     @Override
@@ -50,14 +55,25 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements 
 
     @Override
     public void register(UserRegisterReqDTO requestParam) {
-        if(!hasUsername(requestParam.getUsername())){
-            throw new ClientException(UserErrorCodeEnum.USER_NAME_EXIST);
+        if (!hasUsername(requestParam.getUsername())) {
+            throw new ClientException(USER_NAME_EXIST);
         }
-        int insert = baseMapper.insert(BeanUtil.toBean(requestParam, UserDo.class));
-        if (insert < 1){
-            throw new ClientException(UserErrorCodeEnum.USER_SAVE_ERROR);
+        RLock lock = redissonClient.getLock(LOCK_USER_REGISTER_KEY + requestParam.getUsername());
+        try {
+            if (lock.tryLock()) {
+
+
+                int insert = baseMapper.insert(BeanUtil.toBean(requestParam, UserDo.class));
+                if (insert < 1) {
+                    throw new ClientException(UserErrorCodeEnum.USER_SAVE_ERROR);
+                }
+                userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
+            }
+            throw new ClientException(USER_NAME_EXIST);
+        } finally {
+            lock.unlock();
         }
-        userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
+
 
     }
 }
