@@ -91,5 +91,17 @@ public class UserController {
         return Results.success(result);
     }
 
+    /**
+     * 用户退出登录
+     * @param username
+     * @param token
+     * @return
+     */
+    @DeleteMapping("/api/short-link/v1/user/log-out")
+    public Result<Void> logOut(@RequestParam("username") String username, @RequestParam("token") String token){
+        userService.logOut(username, token);
+        return Results.success();
+    }
+
 
 }

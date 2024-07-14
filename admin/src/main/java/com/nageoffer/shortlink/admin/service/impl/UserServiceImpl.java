@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.admin.common.constant.RedisCacheConstant;
 import com.nageoffer.shortlink.admin.common.convention.exception.ClientException;
 import com.nageoffer.shortlink.admin.common.enums.UserErrorCodeEnum;
-import com.nageoffer.shortlink.admin.dao.entity.UserDo;
+import com.nageoffer.shortlink.admin.dao.entity.UserDO;
 import com.nageoffer.shortlink.admin.dao.mapper.UserMapper;
 import com.nageoffer.shortlink.admin.dto.req.UserLoginReqDTO;
 import com.nageoffer.shortlink.admin.dto.req.UserRegisterReqDTO;
@@ -34,7 +34,7 @@ import static com.nageoffer.shortlink.admin.common.enums.UserErrorCodeEnum.USER_
  * 用户接口实现层
  */
 @Service
-public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements UserService {
+public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements UserService {
     @Autowired
     private RBloomFilter<String> userRegisterCachePenetrationBloomFilter;
     @Autowired
@@ -44,9 +44,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements 
 
     @Override
     public UserRespDTO getUserByUsername(String username) {
-        LambdaQueryWrapper<UserDo> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(UserDo::getUsername,username);
-        UserDo userDo = baseMapper.selectOne(queryWrapper);
+        LambdaQueryWrapper<UserDO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(UserDO::getUsername,username);
+        UserDO userDo = baseMapper.selectOne(queryWrapper);
         UserRespDTO userRespDTO = new UserRespDTO();
         if (userDo != null) {
             BeanUtils.copyProperties(userDo, userRespDTO);
@@ -70,7 +70,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements 
         RLock lock = redissonClient.getLock(LOCK_USER_REGISTER_KEY + requestParam.getUsername());
         try {
             if (lock.tryLock()) {
-                int insert = baseMapper.insert(BeanUtil.toBean(requestParam, UserDo.class));
+                int insert = baseMapper.insert(BeanUtil.toBean(requestParam, UserDO.class));
                 if (insert < 1) {
                     throw new ClientException(UserErrorCodeEnum.USER_SAVE_ERROR);
                 }
@@ -87,9 +87,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements 
     @Override
     public void updateByReqDTO(UserUpdateReqDTO requestParam) {
         // TODO 验证当前用户名是否为登录用户
-        UserDo userDo = BeanUtil.toBean(requestParam, UserDo.class);
-        LambdaUpdateWrapper<UserDo> updateWrapper = new LambdaUpdateWrapper<>();
-        updateWrapper.eq(UserDo::getUsername,requestParam.getUsername());
+        UserDO userDo = BeanUtil.toBean(requestParam, UserDO.class);
+        LambdaUpdateWrapper<UserDO> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(UserDO::getUsername,requestParam.getUsername());
         baseMapper.update(userDo,updateWrapper);
     }
 
@@ -98,12 +98,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements 
         if (stringRedisTemplate.hasKey(RedisCacheConstant.USER_LOGIN_PREFIX +requestParam.getUsername())){
             throw new ClientException(UserErrorCodeEnum.USER_ALREADY_LOGIN);
         }
-        LambdaQueryWrapper<UserDo> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<UserDO> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper
-                .eq(UserDo::getUsername,requestParam.getUsername())
-                .eq(UserDo::getPassword,requestParam.getPassword())
-                .eq(UserDo::getDelFlag,0);
-        UserDo userDo = baseMapper.selectOne(lambdaQueryWrapper);
+                .eq(UserDO::getUsername,requestParam.getUsername())
+                .eq(UserDO::getPassword,requestParam.getPassword())
+                .eq(UserDO::getDelFlag,0);
+        UserDO userDo = baseMapper.selectOne(lambdaQueryWrapper);
         if (userDo == null){
             throw new ClientException(UserErrorCodeEnum.USER_NULL);
         }
@@ -118,6 +118,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements 
     @Override
     public Boolean checkLogin(String username, String token) {
         return stringRedisTemplate.opsForHash().get(RedisCacheConstant.USER_LOGIN_PREFIX + username, token) != null ;
+    }
+
+    @Override
+    public void logOut(String username, String token) {
+        if(checkLogin(username, token)){
+            stringRedisTemplate.delete(RedisCacheConstant.USER_LOGIN_PREFIX + username);
+            return;
+        }else {
+            throw new ClientException(UserErrorCodeEnum.USER_UN_LOGIN);
+        }
+
     }
 
 }

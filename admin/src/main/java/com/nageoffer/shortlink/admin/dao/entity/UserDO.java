@@ -14,7 +14,7 @@ import java.util.Date;
 
 @Data
 @TableName("t_user")
-public class UserDo implements Serializable {
+public class UserDO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -72,5 +72,5 @@ public class UserDo implements Serializable {
     @TableField(value = "del_flag", fill = FieldFill.INSERT)
     private Integer delFlag;
 
-    public UserDo() {}
+    public UserDO() {}
 }
