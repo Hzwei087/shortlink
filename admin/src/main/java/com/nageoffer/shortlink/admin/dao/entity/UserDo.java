@@ -63,7 +63,7 @@ public class UserDo implements Serializable {
     /**
      * 修改时间
      */
-    @TableField(value = "create_time", fill = FieldFill.UPDATE)
+    @TableField(value = "update_time", fill = FieldFill.UPDATE)
     private Date updateTime;
 
     /**
