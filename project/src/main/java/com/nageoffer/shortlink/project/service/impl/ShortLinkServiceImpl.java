@@ -38,6 +38,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -183,10 +184,20 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             ((HttpServletResponse) response).sendRedirect(originLink);
             return;
         }
+        boolean contains = shortUriCreateCachePenetrationBloomFilter.contains(fullShortUrl);
+        if(!contains){
+            return;
+        }
+        //布隆过滤器检查fullShortUrl是否存在，可能会误判存在，实际可能不存在。如果判定会不存在，实际一定不存在
+        String gotoIsNullShortLink = stringRedisTemplate.opsForValue().get(String.format(RedisKeyConstant.GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl));
+        if(StrUtil.isNotBlank(gotoIsNullShortLink)){
+            return;
+        }
+
         String lockKey = String.format(RedisKeyConstant.LOCK_GOTO_SHORT_LINK_KEY, fullShortUrl);
         RLock lock = redissonClient.getLock(lockKey);
         lock.lock();
-        //双重判定锁：首先加分布式锁，防止缓存过期之后的大量请求过来的缓存穿透问题；同时再加上一个双重判定锁，可以让只有第一个拿到锁的请求进行缓存重构，之后拿到锁的请求直接查询缓存即可，提高了程序运行效率
+        //双重判定锁：首先加分布式锁，防止缓存过期之后的大量请求过来的缓存击穿问题；同时再加上一个双重判定锁，可以让只有第一个拿到锁的请求进行缓存重构，之后拿到锁的请求直接查询缓存即可，提高了程序运行效率
 
         try {
             originLink = stringRedisTemplate.opsForValue().get(redisKey);
@@ -199,7 +210,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             linkGotoQueryWrapper.eq(ShortLinkGotoDO::getFullShortUrl, fullShortUrl);
             ShortLinkGotoDO shortLinkGotoDO = shortLinkGotoMapper.selectOne(linkGotoQueryWrapper);
             if (shortLinkGotoDO == null) {
-                //此处需要风控
+                stringRedisTemplate.opsForValue().set(String.format(RedisKeyConstant.GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl),"-",30, TimeUnit.SECONDS);
                 return;
             }
             //数据库查询短链接源地址
