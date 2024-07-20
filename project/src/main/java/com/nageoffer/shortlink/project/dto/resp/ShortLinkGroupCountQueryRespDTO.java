@@ -5,30 +5,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-/**
- * 对象
- */
-public class ShortLinkCreateRespDTO {
+public class ShortLinkGroupCountQueryRespDTO {
     /**
-     * 分组信息
+     * 分组标识
      */
-    private String gid;
-
+    String gid;
     /**
-     * 完整短链接
+     * 短链接数量
      */
-    private String fullShortUrl;
-
-    /**
-     * 原始链接
-     */
-    private String originUrl;
-
-
-
+    Integer shortLinkCount;
 }

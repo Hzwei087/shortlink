@@ -32,7 +32,7 @@ public class ShortLinkPageRespDTO {
     /**
      * 原始链接
      */
-    private String origin_url;
+    private String originUrl;
 
     /**
      * 分组标识
@@ -42,7 +42,7 @@ public class ShortLinkPageRespDTO {
     /**
      * 有效期类型 0 永久有效 1临时有效
      */
-    private int validDateType;
+    private Integer validDateType;
 
     /**
      * 有效期

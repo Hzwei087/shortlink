@@ -6,20 +6,23 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.admin.common.biz.user.UserContext;
 import com.nageoffer.shortlink.admin.common.convention.exception.ClientException;
+import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.common.enums.GroupErrorCodeEnum;
 import com.nageoffer.shortlink.admin.dao.entity.GroupDO;
 import com.nageoffer.shortlink.admin.dao.mapper.GroupMapper;
 import com.nageoffer.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import com.nageoffer.shortlink.admin.dto.req.ShortLinkGroupUpadteReqDTO;
 import com.nageoffer.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
+import com.nageoffer.shortlink.admin.remote.dto.ShortLinkRemoteService;
+import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.nageoffer.shortlink.admin.service.GroupService;
 import com.nageoffer.shortlink.admin.utils.RandomStringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -29,10 +32,18 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     @Autowired
     private GroupMapper groupMapper;
 
+    ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService(){};
+
     @Override
     public void saveGroup(String groupName) {
+        saveGroup(UserContext.getUsername(),groupName);
+    }
 
+    @Override
+    public void saveGroup(String username, String groupName) {
+        //查询此组名是否被使用
         LambdaQueryWrapper<GroupDO> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(GroupDO::getUsername,username);
         queryWrapper.eq(GroupDO::getName, groupName);
         if (baseMapper.exists(queryWrapper)) {
             throw new ClientException(GroupErrorCodeEnum.GROUP_NAME_EXIST);
@@ -41,8 +52,8 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         String gid = RandomStringUtil.generateRandom();
         LambdaQueryWrapper<GroupDO> gidQueryWrapper = new LambdaQueryWrapper<>();
         gidQueryWrapper.eq(GroupDO::getGid, gid)
-                // TODO 设置用户名
-                .eq(GroupDO::getUsername,UserContext.getUsername());
+                .eq(GroupDO::getUsername, Optional.ofNullable(username).orElse(UserContext.getUsername()));
+
         while (baseMapper.exists(gidQueryWrapper)) {
             gid = RandomStringUtil.generateRandom();
             gidQueryWrapper.eq(GroupDO::getGid, gid);
@@ -51,7 +62,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         GroupDO groupDO = GroupDO.builder()
                 .gid(gid)
                 .name(groupName)
-                .username(UserContext.getUsername())
+                .username(Optional.ofNullable(username).orElse(UserContext.getUsername()))
                 .sortOrder(0)
                 .build();
         baseMapper.insert(groupDO);
@@ -60,14 +71,37 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
     @Override
     public List<ShortLinkGroupRespDTO> listGroup() {
-        // TODO 从当前上下文获取用户名
+        // 创建查询条件
         LambdaQueryWrapper<GroupDO> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(GroupDO::getUsername, UserContext.getUsername())
-                .eq(GroupDO::getDelFlag,0)
-                .orderByDesc(GroupDO::getSortOrder,GroupDO::getUpdateTime);
+                .eq(GroupDO::getDelFlag, 0)
+                .orderByDesc(GroupDO::getSortOrder, GroupDO::getUpdateTime);
+
+        // 查询数据库
         List<GroupDO> groupDOList = baseMapper.selectList(queryWrapper);
 
-        return BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
+        // 获取短链接数量列表
+        List<String> groupIds = groupDOList.stream()//将 groupDOList（一个 List<GroupDO>）转换为一个流（Stream）。流是一种支持顺序和并行聚合操作的数据视图。
+                .map(GroupDO::getGid)//使用 map 方法将流中的每个 GroupDO 对象转换为其 gid。 GroupDO::getGid 是一个方法引用，表示对流中的每个 GroupDO 对象调用 getGid() 方法。这会生成一个新的流，其中包含了原始流中每个 GroupDO 对象的 gid
+                .collect(Collectors.toList());//使用 collect 方法将流中的元素收集到一个 List 中。Collectors.toList() 是一个收集器，表示将流中的元素收集到一个新的 List 中。
+        Result<List<ShortLinkGroupCountQueryRespDTO>> listResult = shortLinkRemoteService.listGroupShortLinkCount(groupIds);
+
+        // 转换 listResult 为 Map 以提高查找效率
+        Map<String, Integer> shortLinkCountMap = listResult.getData().stream()
+                .collect(Collectors.toMap(ShortLinkGroupCountQueryRespDTO::getGid,
+                        ShortLinkGroupCountQueryRespDTO::getShortLinkCount));
+
+        // 复制数据并设置短链接数量
+        List<ShortLinkGroupRespDTO> shortLinkGroupRespDTOList = BeanUtil.copyToList(groupDOList, ShortLinkGroupRespDTO.class);
+        shortLinkGroupRespDTOList.forEach(each -> {
+            Integer count = shortLinkCountMap.get(each.getGid());
+            if (count != null) {
+                each.setShortLinkCount(count);
+            }
+        });
+
+        // 返回结果
+        return shortLinkGroupRespDTOList;
     }
 
     @Override
@@ -97,6 +131,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
     @Override
     public void deleteGroup(String gid) {
+        //软删除
         LambdaUpdateWrapper<GroupDO> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(GroupDO::getGid,gid);
         updateWrapper.eq(GroupDO::getUsername,UserContext.getUsername());

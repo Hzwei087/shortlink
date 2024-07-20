@@ -15,12 +15,14 @@ import com.nageoffer.shortlink.admin.dto.req.UserRegisterReqDTO;
 import com.nageoffer.shortlink.admin.dto.req.UserUpdateReqDTO;
 import com.nageoffer.shortlink.admin.dto.resp.UserLoginRespDTO;
 import com.nageoffer.shortlink.admin.dto.resp.UserRespDTO;
+import com.nageoffer.shortlink.admin.service.GroupService;
 import com.nageoffer.shortlink.admin.service.UserService;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -41,6 +43,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
     private RedissonClient redissonClient;
     @Autowired
     private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private GroupService groupService;
 
     @Override
     public UserRespDTO getUserByUsername(String username) {
@@ -70,11 +74,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         RLock lock = redissonClient.getLock(LOCK_USER_REGISTER_KEY + requestParam.getUsername());
         try {
             if (lock.tryLock()) {
-                int insert = baseMapper.insert(BeanUtil.toBean(requestParam, UserDO.class));
-                if (insert < 1) {
-                    throw new ClientException(UserErrorCodeEnum.USER_SAVE_ERROR);
+                try {
+                    int insert = baseMapper.insert(BeanUtil.toBean(requestParam, UserDO.class));
+                    if (insert < 1) {
+                        throw new ClientException(UserErrorCodeEnum.USER_SAVE_ERROR);
+                    }
+                } catch (DuplicateKeyException e) {
+                    throw new ClientException(USER_NAME_EXIST);
                 }
                 userRegisterCachePenetrationBloomFilter.add(requestParam.getUsername());
+                groupService.saveGroup(requestParam.getUsername(),"默认分组");
                 return;
                 //退出try方法
             }
@@ -82,6 +91,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         } finally {
             lock.unlock();
         }
+
     }
 
     @Override
