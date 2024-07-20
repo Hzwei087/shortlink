@@ -9,6 +9,10 @@ mybatis-plus:
 server:
   port: 8001
 spring:
+  mvc:
+    view:
+      prefix: /templates/
+      suffix: .html
   datasource:
     # ShardingSphere 对 Driver 自定义，实现分库分表等隐藏逻辑
     driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
@@ -30,4 +34,5 @@ spring:
       host: 127.0.0.1
       port: 6379
       database: 0
+
 
