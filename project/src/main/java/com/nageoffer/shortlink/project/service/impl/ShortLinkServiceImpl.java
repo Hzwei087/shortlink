@@ -2,8 +2,6 @@ package com.nageoffer.shortlink.project.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.http.server.HttpServerRequest;
-import cn.hutool.http.server.HttpServerResponse;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -24,6 +22,7 @@ import com.nageoffer.shortlink.project.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 import com.nageoffer.shortlink.project.service.ShortLinkService;
 import com.nageoffer.shortlink.project.utils.HashUtil;
+import com.nageoffer.shortlink.project.utils.LinkUtil;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletResponse;
@@ -74,8 +73,12 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 //            }
 
         }
+        //缓存预热
+        stringRedisTemplate.opsForValue()
+                .set(String.format(RedisKeyConstant.GOTO_SHORT_LINK_KEY, fullShortUrl),
+                        shortLinkDO.getOriginUrl(),
+                        LinkUtil.getLinkCacheValidDate(shortLinkDO.getValidDate()), TimeUnit.MILLISECONDS);
         shortUriCreateCachePenetrationBloomFilter.add(fullShortUrl);
-
 
         return ShortLinkCreateRespDTO.builder()
                 .fullShortUrl(shortLinkDO.getFullShortUrl())
@@ -165,10 +168,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             gotoUpdateWrapper
                     .eq(ShortLinkGotoDO::getFullShortUrl, requestParam.getFullShortUrl());
             shortLinkGotoMapper.update(shortLinkGotoDO, gotoUpdateWrapper);
-
         }
-
-
     }
 
     @SneakyThrows
@@ -178,17 +178,20 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         String serverName = request.getServerName();
         String fullShortUrl = "http://" + serverName + "/" + shortUri;
         String redisKey = String.format(RedisKeyConstant.GOTO_SHORT_LINK_KEY, fullShortUrl);
-        System.out.println(redisKey);
         String originLink = stringRedisTemplate.opsForValue().get(redisKey);
         if (StrUtil.isNotBlank(originLink)) {
             ((HttpServletResponse) response).sendRedirect(originLink);
             return;
         }
+
+        //用布隆过滤器解决缓存穿透（用户用不存在的短链接重复调用接口，穿透过缓存查询数据库）
         boolean contains = shortUriCreateCachePenetrationBloomFilter.contains(fullShortUrl);
         if(!contains){
             return;
         }
         //布隆过滤器检查fullShortUrl是否存在，可能会误判存在，实际可能不存在。如果判定会不存在，实际一定不存在
+        //误判存在的无效短链接经过路由表查询后若为空，则在缓存中添加查询为空的记录key = RedisKeyConstant.GOTO_IS_NULL_SHORT_LINK_KEY+fullShortUrl,value ="-";
+        //此不存在的短链接在下次数据库查询前，会在缓存中判断是否有曾经查询过为空的记录
         String gotoIsNullShortLink = stringRedisTemplate.opsForValue().get(String.format(RedisKeyConstant.GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl));
         if(StrUtil.isNotBlank(gotoIsNullShortLink)){
             return;
