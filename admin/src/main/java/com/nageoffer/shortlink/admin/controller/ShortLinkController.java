@@ -55,15 +55,7 @@ public class ShortLinkController {
         return Results.success();
     }
 
-    /**
-     * 短链接移入回收站
-     * @param requestParam
-     * @return
-     */
 
-    @PostMapping("/api/short-link/admin/v1/recycle-bin/save")
-    public Result<Void> saveRecycleBin(@RequestBody RecycleBinSaveReqDTO requestParam){
-        shortLinkRemoteService.saveRecycleBin(requestParam);
-        return Results.success();
-    }
+
+
 }
