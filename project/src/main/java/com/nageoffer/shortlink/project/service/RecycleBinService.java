@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
 import com.nageoffer.shortlink.project.dto.req.RecycleBinSaveReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkPageReqDTO;
+import com.nageoffer.shortlink.project.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkPageRespDTO;
 
 public interface RecycleBinService extends IService<ShortLinkDO> {
@@ -14,5 +15,5 @@ public interface RecycleBinService extends IService<ShortLinkDO> {
      */
     void saveRecycleBin(RecycleBinSaveReqDTO requestParam);
 
-    IPage<ShortLinkPageRespDTO> pageRecycleShortLink(ShortLinkPageReqDTO requestParam);
+    IPage<ShortLinkPageRespDTO> pageRecycleShortLink(ShortLinkRecycleBinPageReqDTO requestParam);
 }
