@@ -53,7 +53,7 @@ public class ShortLinkDO extends BaseDO {
     private Integer enableStatus;
 
     /**
-     * 创建类型 0 接口创建 1控制台创建
+     * 创建类型 0 接口创建 1 控制台创建
      */
     private Integer createdType;
 
