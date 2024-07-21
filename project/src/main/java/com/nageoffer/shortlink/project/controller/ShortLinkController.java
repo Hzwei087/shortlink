@@ -23,10 +23,12 @@ import java.util.List;
 public class ShortLinkController {
     @Autowired
     private ShortLinkService shortLinkService;
+    /**
+     * 根据短链接跳转原链接
+     */
     @GetMapping("/{short-uri}")
     public void restoreUrl(@PathVariable("short-uri") String shortUri, ServletRequest request, ServletResponse response){
         shortLinkService.restoreUrl(shortUri, request, response);
-
     }
     /**
      * 创建短链接
@@ -43,7 +45,6 @@ public class ShortLinkController {
     public Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam){
         IPage<ShortLinkPageRespDTO> result = shortLinkService.pageShortLink(requestParam);
         return Results.success(result);
-
     }
     /**
      * 查询分组内短链接数量

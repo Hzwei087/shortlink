@@ -32,7 +32,8 @@ public class UserTransmitFilter implements Filter {
 
     private static final List<String> IGNOGE_URI = Lists.newArrayList(
             "/api/short-link/admin/v1/user/login",
-            "/api/short-link/admin/v1/user/has-username"
+            "/api/short-link/admin/v1/user/has-username",
+            "/api/short-link/admin/v1/title"
     );
     //"/api/short-link/admin/v1/user" 注册，修改都是用这个路径，用了RESTful来区别，所以没办法用路径来放行
 
