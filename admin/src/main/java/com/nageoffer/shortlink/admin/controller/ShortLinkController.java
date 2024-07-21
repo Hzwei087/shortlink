@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.common.convention.result.Results;
 import com.nageoffer.shortlink.admin.remote.dto.ShortLinkRemoteService;
+import com.nageoffer.shortlink.admin.remote.dto.req.RecycleBinSaveReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkCreateReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkPageReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkUpdateReqDTO;
@@ -51,6 +52,18 @@ public class ShortLinkController {
     @PostMapping("/api/short-link/admin/v1/update")
     public Result<Void> updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam){
         shortLinkRemoteService.updateShortLink(requestParam);
+        return Results.success();
+    }
+
+    /**
+     * 短链接移入回收站
+     * @param requestParam
+     * @return
+     */
+
+    @PostMapping("/api/short-link/admin/v1/recycle-bin/save")
+    public Result<Void> saveRecycleBin(@RequestBody RecycleBinSaveReqDTO requestParam){
+        shortLinkRemoteService.saveRecycleBin(requestParam);
         return Results.success();
     }
 }
