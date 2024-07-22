@@ -10,4 +10,5 @@ import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
  */
 public interface RecycleBinService {
     Result<IPage<ShortLinkPageRespDTO>> pageRecycleShortLink(ShortLinkRecycleBinPageReqDTO requestParam);
+
 }
