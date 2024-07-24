@@ -74,4 +74,57 @@ public class LinkUtil {
         }
 
     }
+
+    /**
+     * 获取用户访问设备
+     *
+     * @param request 请求
+     * @return 访问设备
+     */
+    public static String getDevice(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent.toLowerCase().contains("mobile")) {
+            return "Mobile";
+        }
+        return "PC";
+    }
+
+    /**
+     * 获取用户访问网络
+     *
+     * @param request 请求
+     * @return 访问设备
+     */
+    public static String getNetwork(HttpServletRequest request) {
+        String actualIp = getActualIp(request);
+        // 这里简单判断IP地址范围，您可能需要更复杂的逻辑
+        // 例如，通过调用IP地址库或调用第三方服务来判断网络类型
+        return actualIp.startsWith("192.168.") || actualIp.startsWith("10.") ? "WIFI" : "Mobile";
+    }
+
+    /**
+     * 获取用户真实IP
+     *
+     * @param request 请求
+     * @return 用户真实IP
+     */
+    public static String getActualIp(HttpServletRequest request) {
+        String ipAddress = request.getHeader("X-Forwarded-For");
+        if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.getHeader("Proxy-Client-IP");
+        }
+        if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.getHeader("HTTP_X_FORWARDED_FOR");
+        }
+        if (ipAddress == null || ipAddress.isEmpty() || "unknown".equalsIgnoreCase(ipAddress)) {
+            ipAddress = request.getRemoteAddr();
+        }
+        return ipAddress;
+    }
 }

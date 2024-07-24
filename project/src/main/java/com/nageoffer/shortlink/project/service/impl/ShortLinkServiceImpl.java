@@ -67,6 +67,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkOsStatsMapper linkOsStatsMapper;
     private final LinkBrowserStatsMapper linkBrowserStatsMapper;
     private final LinkAccessLogsMapper linkAccessLogsMapper;
+    private final LinkDeviceStatsMapper linkDeviceStatsMapper;
+    private final LinkNetworkStatsMapper linkNetworkStatsMapper;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocalAmapkey;
@@ -297,6 +299,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             }else {
                 addResponseCookieTask.run();
             }
+            //uv,pv,uip访问记录
             String remoteAddr = request.getRemoteAddr();
             Long uipAdded = stringRedisTemplate.opsForSet().add("short-link:stats:uip" + fullShortUrl, remoteAddr);
             boolean uipFirstFlag = uipAdded != null && uipAdded > 0L;
@@ -320,7 +323,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .date(new Date())
                     .build();
             linkAccessStatsMapper.shortLinkStats(linkAcessStatsDO);
-
+            //地区访问记录
             HashMap<String, Object> localeParamMap = new HashMap<>();
             localeParamMap.put("key", statsLocalAmapkey);
             localeParamMap.put("ip", remoteAddr);
@@ -343,6 +346,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .build();
             }
             linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
+            //操作系统访问记录
             String os = LinkUtil.getOs((HttpServletRequest) request);
             LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
                     .fullShortUrl(fullShortUrl)
@@ -352,6 +356,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .os(os)
                     .build();
             linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
+            //浏览器访问记录
             String browser = LinkUtil.getBrowser((HttpServletRequest) request);
             LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
                     .fullShortUrl(fullShortUrl)
@@ -361,7 +366,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .browser(browser)
                     .build();
             linkBrowserStatsMapper.shortLinkBrowserState(linkBrowserStatsDO);
-
+            //IP访问记录
             LinkAccessLogsDO linkAccessLogsDO = LinkAccessLogsDO.builder()
                     .fullShortUrl(fullShortUrl)
                     .gid(gid)
@@ -371,7 +376,24 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .ip(remoteAddr)
                     .build();
             linkAccessLogsMapper.insert(linkAccessLogsDO);
-
+            //设备访问记录
+            LinkDeviceStatsDO linkDeviceStatsDO = LinkDeviceStatsDO.builder()
+                    .fullShortUrl(fullShortUrl)
+                    .gid(gid)
+                    .date(new Date())
+                    .cnt(1)
+                    .device(LinkUtil.getDevice((HttpServletRequest) request))
+                    .build();
+            linkDeviceStatsMapper.shortLinkDeviceState(linkDeviceStatsDO);
+            //不同网络来源访问记录
+            LinkNetworkStatsDO linkNetworkStatsDO = LinkNetworkStatsDO.builder()
+                    .fullShortUrl(fullShortUrl)
+                    .gid(gid)
+                    .date(new Date())
+                    .cnt(1)
+                    .network(LinkUtil.getNetwork((HttpServletRequest) request))
+                    .build();
+            linkNetworkStatsMapper.shortLinkNetworkState(linkNetworkStatsDO);
 
 
         } catch (Throwable ex) {
