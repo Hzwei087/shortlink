@@ -47,4 +47,31 @@ public class LinkUtil {
         }
 
     }
+    /**
+     * 获取用户访问所使用的浏览器
+     * @param request
+     * @return
+     */
+
+    public static String getBrowser(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent.toLowerCase().contains("edg")) {
+            return "Mircosoft Egde";
+        } else if (userAgent.toLowerCase().contains("chrome")) {
+            return "Google Chrome";
+        } else if (userAgent.toLowerCase().contains("firefox")) {
+            return "Mozilla Firefox";
+        } else if (userAgent.toLowerCase().contains("edg")) {
+            return "Mircosoft Egde";
+        } else if (userAgent.toLowerCase().contains("safari")) {
+            return "Apple Safari";
+        } else if (userAgent.toLowerCase().contains("opera")) {
+            return "Opera";
+        } else if (userAgent.toLowerCase().contains("msie")) {
+            return "Internet Explorer";
+        } else {
+            return "Unknown";
+        }
+
+    }
 }

@@ -64,6 +64,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     final private LinkAccessStatsMapper linkAccessStatsMapper;
     final private LinkLocaleStatsMapper linkLocaleStatsMapper;
     final private LinkOsStatsMapper linkOsStatsMapper;
+    final private LinkBrowserStatsMapper linkBrowserStatsMapper;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocalAmapkey;
@@ -337,10 +338,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .country("中国")
                         .build();
             }
-
-
-
             linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
+
             LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
                     .fullShortUrl(fullShortUrl)
                     .gid(gid)
@@ -348,8 +347,18 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .cnt(1)
                     .os(LinkUtil.getOs((HttpServletRequest) request))
                     .build();
-
             linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
+
+            LinkBrowserStatsDO linkBrowserStatsDO = LinkBrowserStatsDO.builder()
+                    .fullShortUrl(fullShortUrl)
+                    .gid(gid)
+                    .date(new Date())
+                    .cnt(1)
+                    .browser(LinkUtil.getBrowser((HttpServletRequest) request))
+                    .build();
+            linkBrowserStatsMapper.shortLinkBrowserState(linkBrowserStatsDO);
+
+
         } catch (Throwable ex) {
             System.out.println(ex.getMessage());
             log.error("短链接访问量统计异常");
