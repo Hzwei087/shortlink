@@ -5,18 +5,24 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.Week;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.http.HttpUtil;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.project.common.constant.RedisKeyConstant;
+import com.nageoffer.shortlink.project.common.constant.ShortLinkConstant;
 import com.nageoffer.shortlink.project.common.convention.exception.ClientException;
 import com.nageoffer.shortlink.project.common.convention.exception.ServiceException;
 import com.nageoffer.shortlink.project.common.enums.ValiDateTypeEnum;
 import com.nageoffer.shortlink.project.dao.entity.LinkAccessStatsDO;
+import com.nageoffer.shortlink.project.dao.entity.LinkLocaleStatsDO;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
 import com.nageoffer.shortlink.project.dao.entity.ShortLinkGotoDO;
 import com.nageoffer.shortlink.project.dao.mapper.LinkAccessStatsMapper;
+import com.nageoffer.shortlink.project.dao.mapper.LinkLocaleStatsMapper;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkGotoMapper;
 import com.nageoffer.shortlink.project.dao.mapper.ShortLinkMapper;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkCreateReqDTO;
@@ -33,6 +39,7 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
@@ -42,6 +49,7 @@ import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -54,17 +62,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLinkDO> implements ShortLinkService {
-    @Autowired
-    private RBloomFilter<String> shortUriCreateCachePenetrationBloomFilter;
-    @Autowired
-    private ShortLinkGotoMapper shortLinkGotoMapper;
-    @Autowired
-    private StringRedisTemplate stringRedisTemplate;
-    @Autowired
-    private RedissonClient redissonClient;
-    @Autowired
-    private LinkAccessStatsMapper linkAccessStatsMapper;
+    final private RBloomFilter<String> shortUriCreateCachePenetrationBloomFilter;
+    final private ShortLinkGotoMapper shortLinkGotoMapper;
+    final private StringRedisTemplate stringRedisTemplate;
+    final private RedissonClient redissonClient;
+    final private LinkAccessStatsMapper linkAccessStatsMapper;
+    final private LinkLocaleStatsMapper linkLocaleStatsMapper;
+
+    @Value("${short-link.stats.locale.amap-key}")
+    private String statsLocalAmapkey;
 
 
     @Override
@@ -313,6 +321,31 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .date(new Date())
                     .build();
             linkAccessStatsMapper.shortLinkStats(linkAcessStatsDO);
+            HashMap<String, Object> localeParamMap = new HashMap<>();
+            localeParamMap.put("key", statsLocalAmapkey);
+            localeParamMap.put("ip", remoteAddr);
+            String localeResultStr = HttpUtil.get(ShortLinkConstant.AMAP_REMOTE_URL, localeParamMap);
+            JSONObject localeResultObj = JSON.parseObject(localeResultStr);
+            String infocode = localeResultObj.getString("infocode");
+            String province = localeResultObj.getString("province");
+            boolean unknowFlag = StrUtil.equals(province,"[]");
+            LinkLocaleStatsDO linkLocaleStatsDO = null;
+            if (StrUtil.isNotBlank(infocode) && StrUtil.equals(infocode,"10000")){
+                linkLocaleStatsDO = LinkLocaleStatsDO.builder()
+                        .fullShortUrl(fullShortUrl)
+                        .gid(gid)
+                        .date(new Date())
+                        .cnt(1)
+                        .province(unknowFlag ? "未知" : province)
+                        .city(unknowFlag ? "未知" : localeResultObj.getString("city"))
+                        .adcode(unknowFlag ? "未知" : localeResultObj.getString("adcode"))
+                        .country("中国")
+                        .build();
+            }
+
+
+
+            linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
         } catch (Throwable ex) {
             System.out.println(ex.getMessage());
             log.error("短链接访问量统计异常");
