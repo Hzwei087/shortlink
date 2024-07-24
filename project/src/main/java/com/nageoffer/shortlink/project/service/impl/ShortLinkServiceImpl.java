@@ -17,14 +17,8 @@ import com.nageoffer.shortlink.project.common.constant.ShortLinkConstant;
 import com.nageoffer.shortlink.project.common.convention.exception.ClientException;
 import com.nageoffer.shortlink.project.common.convention.exception.ServiceException;
 import com.nageoffer.shortlink.project.common.enums.ValiDateTypeEnum;
-import com.nageoffer.shortlink.project.dao.entity.LinkAccessStatsDO;
-import com.nageoffer.shortlink.project.dao.entity.LinkLocaleStatsDO;
-import com.nageoffer.shortlink.project.dao.entity.ShortLinkDO;
-import com.nageoffer.shortlink.project.dao.entity.ShortLinkGotoDO;
-import com.nageoffer.shortlink.project.dao.mapper.LinkAccessStatsMapper;
-import com.nageoffer.shortlink.project.dao.mapper.LinkLocaleStatsMapper;
-import com.nageoffer.shortlink.project.dao.mapper.ShortLinkGotoMapper;
-import com.nageoffer.shortlink.project.dao.mapper.ShortLinkMapper;
+import com.nageoffer.shortlink.project.dao.entity.*;
+import com.nageoffer.shortlink.project.dao.mapper.*;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkPageReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkUpdateReqDTO;
@@ -48,7 +42,6 @@ import org.jsoup.nodes.Element;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -70,6 +63,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     final private RedissonClient redissonClient;
     final private LinkAccessStatsMapper linkAccessStatsMapper;
     final private LinkLocaleStatsMapper linkLocaleStatsMapper;
+    final private LinkOsStatsMapper linkOsStatsMapper;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocalAmapkey;
@@ -321,6 +315,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .date(new Date())
                     .build();
             linkAccessStatsMapper.shortLinkStats(linkAcessStatsDO);
+
             HashMap<String, Object> localeParamMap = new HashMap<>();
             localeParamMap.put("key", statsLocalAmapkey);
             localeParamMap.put("ip", remoteAddr);
@@ -346,6 +341,15 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
 
 
             linkLocaleStatsMapper.shortLinkLocaleState(linkLocaleStatsDO);
+            LinkOsStatsDO linkOsStatsDO = LinkOsStatsDO.builder()
+                    .fullShortUrl(fullShortUrl)
+                    .gid(gid)
+                    .date(new Date())
+                    .cnt(1)
+                    .os(LinkUtil.getOs((HttpServletRequest) request))
+                    .build();
+
+            linkOsStatsMapper.shortLinkOsState(linkOsStatsDO);
         } catch (Throwable ex) {
             System.out.println(ex.getMessage());
             log.error("短链接访问量统计异常");

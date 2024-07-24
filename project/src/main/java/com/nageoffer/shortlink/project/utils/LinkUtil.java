@@ -3,10 +3,9 @@ package com.nageoffer.shortlink.project.utils;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import com.nageoffer.shortlink.project.common.constant.ShortLinkConstant;
-import lombok.Data;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.Date;
-import java.util.Optional;
 
 public class LinkUtil {
     /**
@@ -22,6 +21,29 @@ public class LinkUtil {
             return ShortLinkConstant.DEFAULT_CACHE_VALID_TIME;
         }else {
             return DateUtil.between(new Date(),validDate,DateUnit.MS);
+        }
+
+    }
+
+    /**
+     * 获取用户访问所使用的操作系统
+     * @param request
+     * @return
+     */
+    public static String getOs(HttpServletRequest request){
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent.toLowerCase().contains("windows")){
+            return "Windows";
+        }else if (userAgent.toLowerCase().contains("mac")){
+            return "Mac OS";
+        }else if (userAgent.toLowerCase().contains("linux")){
+            return "Linux";
+        }else if (userAgent.toLowerCase().contains("android")){
+            return "Android";
+        }else if (userAgent.toLowerCase().contains("iphone") || userAgent.toLowerCase().contains("ipad")){
+            return "iOS";
+        }else {
+            return "Unknown";
         }
 
     }
