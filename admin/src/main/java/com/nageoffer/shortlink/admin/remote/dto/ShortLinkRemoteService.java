@@ -9,10 +9,7 @@ import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.dto.req.RecycleBinRemoveReqDTO;
 import com.nageoffer.shortlink.admin.dto.req.ShortLinkStatsReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.*;
-import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkCreateRespDTO;
-import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkGroupCountQueryRespDTO;
-import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
-import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkStatsRespDTO;
+import com.nageoffer.shortlink.admin.remote.dto.resp.*;
 import org.apache.commons.collections4.map.HashedMap;
 import org.springframework.web.bind.annotation.GetMapping;
 
@@ -114,6 +111,24 @@ public interface ShortLinkRemoteService {
         String resultPageStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/stats",requestMap);
 
         return JSON.parseObject(resultPageStr, new TypeReference<Result<ShortLinkStatsRespDTO>>() {
+        });
+    }
+
+    /**
+     * 访问单个短链接指定时间内访问记录监控数据
+     */
+    default Result<IPage<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
+        Map<String, Object> requestMap = new HashedMap<>();
+        requestMap.put("size", requestParam.getSize());
+        requestMap.put("current", requestParam.getCurrent());
+        requestMap.put("fullShortUrl", requestParam.getFullShortUrl());
+        requestMap.put("gid", requestParam.getGid());
+        requestMap.put("startDate", requestParam.getStartDate());
+        requestMap.put("endDate", requestParam.getEndDate());
+        requestMap.put("enableStatus", requestParam.getEnableStatus());
+        String resultPageStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/stats/access-record", requestMap);
+
+        return JSON.parseObject(resultPageStr, new TypeReference<Result<IPage<ShortLinkStatsAccessRecordRespDTO>>>() {
         });
     }
 }

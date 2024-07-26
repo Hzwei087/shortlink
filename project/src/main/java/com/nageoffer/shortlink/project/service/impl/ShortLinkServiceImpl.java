@@ -276,7 +276,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         Cookie[] cookies = ((HttpServletRequest) request).getCookies();
         try {
             AtomicReference<String> uv = new AtomicReference<>();
+            //在 Java 中，Runnable 是一个函数式接口，它只有一个抽象方法 run。这意味着可以使用 Lambda 表达式来实现该接口，因为 Lambda 表达式本质上是对一个函数式接口的实现。
             Runnable addResponseCookieTask = () -> {
+                //匿名内部类
                 uv.set(cn.hutool.core.lang.UUID.fastUUID().toString());
                 Cookie uvCookie = new Cookie("uv", uv.get());
                 uvCookie.setMaxAge(60 * 60 * 24 * 30);
@@ -296,6 +298,25 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                             Long added = stringRedisTemplate.opsForSet().add("short-link:stats:uv:" + fullShortUrl, each);
                             uvFirstFlag.set(added != null && added > 0L);
                         },addResponseCookieTask);
+                //非lambda实现
+                //if (ArrayUtil.isNotEmpty(cookies)) {
+                //    Cookie foundCookie = null;
+                //    for (Cookie each : cookies) {
+                //        if (Objects.equals(each.getName(), "uv")) {
+                //            foundCookie = each;
+                //            break;
+                //        }
+                //    }
+                //
+                //    if (foundCookie != null) {
+                //        String each = foundCookie.getValue();
+                //        uv.set(each);
+                //        Long added = stringRedisTemplate.opsForSet().add("short-link:stats:uv:" + fullShortUrl, each);
+                //        uvFirstFlag.set(added != null && added > 0L);
+                //    } else {
+                //        addResponseCookieTask.run();
+                //    }
+                //}
             }else {
                 addResponseCookieTask.run();
             }
@@ -331,6 +352,9 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
             JSONObject localeResultObj = JSON.parseObject(localeResultStr);
             String infocode = localeResultObj.getString("infocode");
             String province = localeResultObj.getString("province");
+            String city = localeResultObj.getString("city");
+            String adcode = localeResultObj.getString("adcode");
+
             boolean unknowFlag = StrUtil.equals(province,"[]");
             LinkLocaleStatsDO linkLocaleStatsDO = null;
             if (StrUtil.isNotBlank(infocode) && StrUtil.equals(infocode,"10000")){
@@ -340,8 +364,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                         .date(new Date())
                         .cnt(1)
                         .province(unknowFlag ? "未知" : province)
-                        .city(unknowFlag ? "未知" : localeResultObj.getString("city"))
-                        .adcode(unknowFlag ? "未知" : localeResultObj.getString("adcode"))
+                        .city(unknowFlag ? "未知" : city)
+                        .adcode(unknowFlag ? "未知" : adcode)
                         .country("中国")
                         .build();
             }
@@ -366,6 +390,27 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .browser(browser)
                     .build();
             linkBrowserStatsMapper.shortLinkBrowserState(linkBrowserStatsDO);
+
+            //设备访问记录
+            String device = LinkUtil.getDevice((HttpServletRequest) request);
+            LinkDeviceStatsDO linkDeviceStatsDO = LinkDeviceStatsDO.builder()
+                    .fullShortUrl(fullShortUrl)
+                    .gid(gid)
+                    .date(new Date())
+                    .cnt(1)
+                    .device(device)
+                    .build();
+            linkDeviceStatsMapper.shortLinkDeviceState(linkDeviceStatsDO);
+            //不同网络来源访问记录
+            String network = LinkUtil.getNetwork((HttpServletRequest) request);
+            LinkNetworkStatsDO linkNetworkStatsDO = LinkNetworkStatsDO.builder()
+                    .fullShortUrl(fullShortUrl)
+                    .gid(gid)
+                    .date(new Date())
+                    .cnt(1)
+                    .network(network)
+                    .build();
+            linkNetworkStatsMapper.shortLinkNetworkState(linkNetworkStatsDO);
             //IP访问记录
             LinkAccessLogsDO linkAccessLogsDO = LinkAccessLogsDO.builder()
                     .fullShortUrl(fullShortUrl)
@@ -374,26 +419,11 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .browser(browser)
                     .os(os)
                     .ip(remoteAddr)
+                    .network(network)
+                    .device(device)
+                    .locale(StrUtil.join("-","中国",province,city))
                     .build();
             linkAccessLogsMapper.insert(linkAccessLogsDO);
-            //设备访问记录
-            LinkDeviceStatsDO linkDeviceStatsDO = LinkDeviceStatsDO.builder()
-                    .fullShortUrl(fullShortUrl)
-                    .gid(gid)
-                    .date(new Date())
-                    .cnt(1)
-                    .device(LinkUtil.getDevice((HttpServletRequest) request))
-                    .build();
-            linkDeviceStatsMapper.shortLinkDeviceState(linkDeviceStatsDO);
-            //不同网络来源访问记录
-            LinkNetworkStatsDO linkNetworkStatsDO = LinkNetworkStatsDO.builder()
-                    .fullShortUrl(fullShortUrl)
-                    .gid(gid)
-                    .date(new Date())
-                    .cnt(1)
-                    .network(LinkUtil.getNetwork((HttpServletRequest) request))
-                    .build();
-            linkNetworkStatsMapper.shortLinkNetworkState(linkNetworkStatsDO);
 
 
         } catch (Throwable ex) {

@@ -408,7 +408,7 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
 
     @Override
     public IPage<ShortLinkStatsAccessRecordRespDTO> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
-        checkGroupBelongToUser(requestParam.getGid());
+//        checkGroupBelongToUser(requestParam.getGid());
         LambdaQueryWrapper<LinkAccessLogsDO> queryWrapper = Wrappers.lambdaQuery(LinkAccessLogsDO.class)
                 .eq(LinkAccessLogsDO::getFullShortUrl, requestParam.getFullShortUrl())
                 .between(LinkAccessLogsDO::getCreateTime, requestParam.getStartDate(), requestParam.getEndDate())
