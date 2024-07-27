@@ -26,7 +26,7 @@ public class ShortLinkCreateReqDTO {
     private String gid;
 
     /**
-     * 创建类型 0 接口创建 1控制台创建
+     * 创建类型 0 接口创建 1 控制台创建
      */
     private Integer createdType;
 

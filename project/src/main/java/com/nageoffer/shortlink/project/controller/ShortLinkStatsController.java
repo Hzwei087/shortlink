@@ -32,7 +32,7 @@ public class ShortLinkStatsController {
     }
 
     /**
-     * 访问单个短链接指定时间内访问记录监控数据
+     * 分页查询单个短链接指定时间内访问记录监控数据
      */
     @GetMapping("/api/short-link/v1/stats/access-record")
     public Result<IPage<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {

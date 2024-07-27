@@ -83,6 +83,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
         shortLinkDO.setShortUri(shortLinkSuffix);
         shortLinkDO.setFavicon(getFavicon(requestParam.getOriginUrl()));
         shortLinkDO.setEnableStatus(0);
+        shortLinkDO.setTotalPv(0);
+        shortLinkDO.setTotalUv(0);
+        shortLinkDO.setTotalUip(0);
+
         ShortLinkGotoDO linkGotoDO = ShortLinkGotoDO.builder()
                 .fullShortUrl(fullShortUrl)
                 .gid(requestParam.getGid())
@@ -344,6 +348,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .date(new Date())
                     .build();
             linkAccessStatsMapper.shortLinkStats(linkAcessStatsDO);
+
             //地区访问记录
             HashMap<String, Object> localeParamMap = new HashMap<>();
             localeParamMap.put("key", statsLocalAmapkey);
@@ -424,6 +429,15 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .locale(StrUtil.join("-","中国",province,city))
                     .build();
             linkAccessLogsMapper.insert(linkAccessLogsDO);
+            baseMapper.incrementStats(
+                    gid,
+                    fullShortUrl,
+                    1,
+                    uvFirstFlag.get() ? 1 : 0,
+                    uipFirstFlag ? 1 : 0
+            );
+
+
 
 
         } catch (Throwable ex) {
