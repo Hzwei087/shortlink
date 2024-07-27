@@ -44,15 +44,15 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
     @Override
     public ShortLinkStatsRespDTO oneShortLinkStats(ShortLinkStatsReqDTO requestParam) {
 //        checkGroupBelongToUser(requestParam.getGid());
-        //通过短链接查询该短链接在所定义时间区间内的pv,uv,uip
+        //通过短链接查询该短链接在所定义时间区间内各日的pv,uv,uip
         List<LinkAccessStatsDO> listStatsByShortLink = linkAccessStatsMapper.listStatsByShortLink(requestParam);
         if (CollUtil.isEmpty(listStatsByShortLink)) {
             return null;
         }
-        
 
-        // 基础访问数据
+        // 基础访问数据，所定义时间区间内总pv,uv,uip
         LinkAccessStatsDO pvUvUidStatsByShortLink = linkAccessLogsMapper.findPvUvUidStatsByShortLink(requestParam);
+
         // 基础访问详情
         List<ShortLinkStatsAccessDailyRespDTO> daily = new ArrayList<>();
         List<String> rangeDates = DateUtil.rangeToList(DateUtil.parse(requestParam.getStartDate()), DateUtil.parse(requestParam.getEndDate()), DateField.DAY_OF_MONTH).stream()
@@ -244,7 +244,7 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
 
     @Override
     public ShortLinkStatsRespDTO groupShortLinkStats(ShortLinkGroupStatsReqDTO requestParam) {
-        checkGroupBelongToUser(requestParam.getGid());
+//        checkGroupBelongToUser(requestParam.getGid());
         List<LinkAccessStatsDO> listStatsByGroup = linkAccessStatsMapper.listStatsByGroup(requestParam);
         if (CollUtil.isEmpty(listStatsByGroup)) {
             return null;
@@ -444,7 +444,7 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
 
     @Override
     public IPage<ShortLinkStatsAccessRecordRespDTO> groupShortLinkStatsAccessRecord(ShortLinkGroupStatsAccessRecordReqDTO requestParam) {
-        checkGroupBelongToUser(requestParam.getGid());
+//        checkGroupBelongToUser(requestParam.getGid());
         IPage<LinkAccessLogsDO> linkAccessLogsDOIPage = linkAccessLogsMapper.selectGroupPage(requestParam);
         if (CollUtil.isEmpty(linkAccessLogsDOIPage.getRecords())) {
             return new Page<>();

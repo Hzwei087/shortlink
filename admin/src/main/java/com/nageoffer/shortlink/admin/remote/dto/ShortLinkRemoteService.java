@@ -7,6 +7,8 @@ import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.dto.req.RecycleBinRemoveReqDTO;
+import com.nageoffer.shortlink.admin.dto.req.ShortLinkGroupStatsAccessRecordReqDTO;
+import com.nageoffer.shortlink.admin.dto.req.ShortLinkGroupStatsReqDTO;
 import com.nageoffer.shortlink.admin.dto.req.ShortLinkStatsReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.*;
 import com.nageoffer.shortlink.admin.remote.dto.resp.*;
@@ -118,7 +120,21 @@ public interface ShortLinkRemoteService {
     }
 
     /**
-     * 访问单个短链接指定时间内访问记录监控数据
+     * 访问分组内所有短链接指定时间内监控数据
+     */
+    default Result<ShortLinkStatsRespDTO> groupShortLinkStats(ShortLinkGroupStatsReqDTO requestParam){
+        Map<String, Object> requestMap = new HashedMap<>();
+        requestMap.put("gid",requestParam.getGid());
+        requestMap.put("startDate", requestParam.getStartDate());
+        requestMap.put("endDate", requestParam.getEndDate());
+        String resultPageStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/stats/group",requestMap);
+
+        return JSON.parseObject(resultPageStr, new TypeReference<Result<ShortLinkStatsRespDTO>>() {
+        });
+    };
+
+    /**
+     * 访问单个短链接指定时间内访问日志
      */
     default Result<IPage<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
         Map<String, Object> requestMap = new HashedMap<>();
@@ -134,4 +150,20 @@ public interface ShortLinkRemoteService {
         return JSON.parseObject(resultPageStr, new TypeReference<Result<IPage<ShortLinkStatsAccessRecordRespDTO>>>() {
         });
     }
+    /**
+     * 分页查询分组内所有短链接指定时间内访问日志
+     */
+    default Result<IPage<ShortLinkStatsAccessRecordRespDTO>> groupShortLinkStatsAccessRecord(ShortLinkGroupStatsAccessRecordReqDTO requestParam){
+        Map<String, Object> requestMap = new HashedMap<>();
+        requestMap.put("size", requestParam.getSize());
+        requestMap.put("current", requestParam.getCurrent());
+        requestMap.put("gid", requestParam.getGid());
+        requestMap.put("startDate", requestParam.getStartDate());
+        requestMap.put("endDate", requestParam.getEndDate());
+        String resultPageStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/stats/access-record/group", requestMap);
+
+        return JSON.parseObject(resultPageStr, new TypeReference<Result<IPage<ShortLinkStatsAccessRecordRespDTO>>>() {
+        });
+    };
+
 }
