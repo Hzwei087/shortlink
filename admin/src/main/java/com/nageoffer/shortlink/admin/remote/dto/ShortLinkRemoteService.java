@@ -37,13 +37,16 @@ public interface ShortLinkRemoteService {
     default Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam){
         Map<String, Object> requestMap = new HashedMap<>();
         requestMap.put("gid", requestParam.getGid());
-        requestMap.put("size",requestParam.getSize());
+        requestMap.put("size", requestParam.getSize());
+        requestMap.put("orderTag", requestParam.getOrderTag());
         requestMap.put("current", requestParam.getCurrent());
-        String resultPageStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/page",requestMap);
+        String resultPageStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/page", requestMap);
 
         return JSON.parseObject(resultPageStr, new TypeReference<Result<IPage<ShortLinkPageRespDTO>>>() {
         });
-    };
+    }
+
+    ;
     /**
      * 查询分组内短链接数量
      */
