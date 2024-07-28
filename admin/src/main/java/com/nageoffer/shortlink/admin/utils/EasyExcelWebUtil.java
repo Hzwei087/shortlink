@@ -43,8 +43,20 @@ public class EasyExcelWebUtil {
     public static void write(HttpServletResponse response, String fileName, Class<?> clazz, List<?> data) {
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding("utf-8");
+        //设置响应内容类型和字符编码
+        //setContentType：设置响应的内容类型为Excel文件格式。
+        //setCharacterEncoding：设置响应的字符编码为UTF-8。
+
         fileName = URLEncoder.encode(fileName, StandardCharsets.UTF_8).replaceAll("\\+", "%20");
+        //处理文件名编码，URLEncoder.encode：使用UTF-8编码对文件名进行URL编码，确保文件名中包含的特殊字符在传输过程中不会出现问题。
+        //replaceAll("\\+", "%20")：将编码后的加号（+）替换为百分号编码的空格（%20），因为在URL编码中空格会被编码为+，但在文件名中应显示为空格。
+
         response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
         EasyExcel.write(response.getOutputStream(), clazz).sheet("Sheet").doWrite(data);
+        //response.getOutputStream()：获取响应的输出流，将Excel文件内容写入该输出流。
+        //clazz：指定Excel文件的数据结构。
+        //sheet("Sheet")：创建一个名为"Sheet"的工作表。
+        //doWrite(data)：将数据写入Excel文件。
+
     }
 }

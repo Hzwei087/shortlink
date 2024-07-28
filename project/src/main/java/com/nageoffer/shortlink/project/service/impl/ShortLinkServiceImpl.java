@@ -296,7 +296,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .eq(ShortLinkDO::getDelFlag, 0)
                     .eq(ShortLinkDO::getEnableStatus, 0);
             ShortLinkDO shortLinkDO = baseMapper.selectOne(shortLinkDOqueryWrapper);
-            if (shortLinkDO == null || shortLinkDO.getValidDate().before(new Date())) {
+            if (shortLinkDO == null || (shortLinkDO.getValidDate() != null && shortLinkDO.getValidDate().before(new Date()))) {
+                //shortLinkDO.getValidDate() != null避免有效期永久的短链接移入回收站后，因清除了该短链接映射源地址的缓存，导致逻辑走到这里时，获取有效期出现的空指针异常，永久短链接的有效期为null
                 stringRedisTemplate.opsForValue().set(String.format(RedisKeyConstant.GOTO_IS_NULL_SHORT_LINK_KEY, fullShortUrl), "-", 30, TimeUnit.SECONDS);
                 ((HttpServletResponse) response).sendRedirect("/page/notfound");
                 return;
