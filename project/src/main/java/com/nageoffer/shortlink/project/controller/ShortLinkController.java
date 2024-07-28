@@ -4,9 +4,11 @@ import cn.hutool.http.server.HttpServerResponse;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.nageoffer.shortlink.project.common.convention.result.Result;
 import com.nageoffer.shortlink.project.common.convention.result.Results;
+import com.nageoffer.shortlink.project.dto.req.ShortLinkBatchCreateReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkCreateReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkPageReqDTO;
 import com.nageoffer.shortlink.project.dto.req.ShortLinkUpdateReqDTO;
+import com.nageoffer.shortlink.project.dto.resp.ShortLinkBatchCreateRespDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkCreateRespDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.nageoffer.shortlink.project.dto.resp.ShortLinkPageRespDTO;
@@ -23,6 +25,7 @@ import java.util.List;
 public class ShortLinkController {
     @Autowired
     private ShortLinkService shortLinkService;
+
     /**
      * 根据短链接跳转原链接
      */
@@ -30,14 +33,24 @@ public class ShortLinkController {
     public void restoreUrl(@PathVariable("short-uri") String shortUri, ServletRequest request, ServletResponse response){
         shortLinkService.restoreUrl(shortUri, request, response);
     }
+
     /**
      * 创建短链接
      */
     @PostMapping("/api/short-link/v1/create")
     public Result<ShortLinkCreateRespDTO> creatShortLink(@RequestBody ShortLinkCreateReqDTO requestParam){
-        ShortLinkCreateRespDTO result = shortLinkService.creatShortLink(requestParam);
+        ShortLinkCreateRespDTO result = shortLinkService.createShortLink(requestParam);
         return Results.success(result);
     }
+
+    /**
+     * 批量创建短链接
+     */
+    @PostMapping("/api/short-link/v1/create/batch")
+    public Result<ShortLinkBatchCreateRespDTO> batchCreateShortLink(@RequestBody ShortLinkBatchCreateReqDTO requestParam) {
+        return Results.success(shortLinkService.batchCreateShortLink(requestParam));
+    }
+
     /**
      * 短链接分页查询
      */
@@ -46,6 +59,7 @@ public class ShortLinkController {
         IPage<ShortLinkPageRespDTO> result = shortLinkService.pageShortLink(requestParam);
         return Results.success(result);
     }
+
     /**
      * 查询分组内短链接数量
      */
@@ -54,6 +68,7 @@ public class ShortLinkController {
         return Results.success(shortLinkService.listGroupShortLinkCount(requestParam));
 
     }
+
     /**
      * 短链接信息修改
      */
