@@ -43,6 +43,7 @@ import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.health.ReactiveHealthContributorRegistry;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -70,23 +71,42 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
     private final LinkStatsTodayMapper linkStatsTodayMapper;
+    private final ReactiveHealthContributorRegistry reactiveHealthContributorRegistry;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocalAmapkey;
+    @Value("${short-link.domain.default}")
+    private String defaultDomain;
 
 
     @Override
     public ShortLinkCreateRespDTO creatShortLink(ShortLinkCreateReqDTO requestParam) {
         String shortLinkSuffix = generateSuffix(requestParam);
-        String fullShortUrl = requestParam.getDomain() + "/" + shortLinkSuffix;
-        ShortLinkDO shortLinkDO = BeanUtil.toBean(requestParam, ShortLinkDO.class);
-        shortLinkDO.setFullShortUrl(fullShortUrl);
-        shortLinkDO.setShortUri(shortLinkSuffix);
-        shortLinkDO.setFavicon(getFavicon(requestParam.getOriginUrl()));
-        shortLinkDO.setEnableStatus(0);
-        shortLinkDO.setTotalPv(0);
-        shortLinkDO.setTotalUv(0);
-        shortLinkDO.setTotalUip(0);
+        String fullShortUrl = defaultDomain + "/" + shortLinkSuffix;
+//        ShortLinkDO shortLinkDO = BeanUtil.toBean(requestParam, ShortLinkDO.class);
+//        shortLinkDO.setFullShortUrl(fullShortUrl);
+//        shortLinkDO.setShortUri(shortLinkSuffix);
+//        shortLinkDO.setFavicon(getFavicon(requestParam.getOriginUrl()));
+//        shortLinkDO.setEnableStatus(0);
+//        shortLinkDO.setTotalPv(0);
+//        shortLinkDO.setTotalUv(0);
+//        shortLinkDO.setTotalUip(0);
+        ShortLinkDO shortLinkDO = ShortLinkDO.builder()
+                .domain(defaultDomain)
+                .originUrl(requestParam.getOriginUrl())
+                .gid(requestParam.getGid())
+                .createdType(requestParam.getCreatedType())
+                .validDateType(requestParam.getValidDateType())
+                .validDate(requestParam.getValidDate())
+                .describe(requestParam.getDescribe())
+                .shortUri(shortLinkSuffix)
+                .enableStatus(0)
+                .totalPv(0)
+                .totalUv(0)
+                .totalUip(0)
+                .fullShortUrl(fullShortUrl)
+                .favicon(getFavicon(requestParam.getOriginUrl()))
+                .build();
 
         ShortLinkGotoDO linkGotoDO = ShortLinkGotoDO.builder()
                 .fullShortUrl(fullShortUrl)
@@ -210,7 +230,22 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
     public void restoreUrl(String shortUri, ServletRequest request, ServletResponse response) {
 
         String serverName = request.getServerName();
-        String fullShortUrl = serverName + "/" + shortUri;
+        //这里使用Optional.of来包装request.getServerPort()的返回值。如果返回值为null，则会抛出NullPointerException。这表示开发者确信getServerPort()不会返回null。
+        String serverPort = Optional.of(request.getServerPort())
+                .filter(each -> !Objects.equals(each, 80))
+                .map(String::valueOf)
+                .map(each -> ":" + each)
+                .orElse("");
+//      String serverPort = "";
+//      Integer port = request.getServerPort();
+//
+//      过滤掉端口80
+//      if (!Objects.equals(port, 80)) {
+//      将端口号转换为字符串并添加前缀":"
+//      serverPort = ":" + String.valueOf(port);
+//}
+
+        String fullShortUrl = serverName + serverPort + "/" + shortUri;
         String redisKey = String.format(RedisKeyConstant.GOTO_SHORT_LINK_KEY, fullShortUrl);
         String originLink = stringRedisTemplate.opsForValue().get(redisKey);
         if (StrUtil.isNotBlank(originLink)) {

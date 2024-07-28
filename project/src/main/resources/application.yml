@@ -35,6 +35,9 @@ spring:
       port: 6379
       database: 0
 short-link:
+  domain:
+    default: nurl.ink:8001
+
   stats:
     locale:
       amap-key: 6bcea25e49d09a5d9544c967b57a5ab3
