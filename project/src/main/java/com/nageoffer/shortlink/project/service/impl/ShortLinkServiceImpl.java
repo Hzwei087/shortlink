@@ -199,7 +199,8 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .build();
         if (Objects.equals(hasShortLinkDO.getGid(), requestParam.getGid())) {
             LambdaUpdateWrapper<ShortLinkDO> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-            lambdaUpdateWrapper.eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
+            lambdaUpdateWrapper
+                    .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
                     .eq(ShortLinkDO::getGid, requestParam.getGid())
                     .eq(ShortLinkDO::getDelFlag, 0)
                     .eq(ShortLinkDO::getEnableStatus, 0)
@@ -222,6 +223,16 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .eq(ShortLinkGotoDO::getFullShortUrl, requestParam.getFullShortUrl());
             shortLinkGotoMapper.update(shortLinkGotoDO, gotoUpdateWrapper);
         }
+        if (!Objects.equals(hasShortLinkDO.getValidDate(), requestParam.getValidDate())
+                || !Objects.equals(hasShortLinkDO.getValidDateType(), requestParam.getValidDateType())) {
+            stringRedisTemplate.delete(String.format(RedisKeyConstant.GOTO_SHORT_LINK_KEY, requestParam.getFullShortUrl()));
+            //修改短链接有效期或有效类型后，删除短链接映射原链接的缓存，使短链接下次跳转时重新从数据库查询有效状态，若有效则再加入缓存中
+            if (hasShortLinkDO.getValidDate() != null && hasShortLinkDO.getValidDate().before(new Date())){
+                if (Objects.equals(requestParam.getValidDateType(), ValiDateTypeEnum.PERMANENT.getType()) || requestParam.getValidDate().after(new Date())){
+                    stringRedisTemplate.delete(String.format(RedisKeyConstant.GOTO_IS_NULL_SHORT_LINK_KEY, requestParam.getFullShortUrl()));
+                }
+            }
+        }
     }
 
     @SneakyThrows
@@ -237,13 +248,10 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                 .orElse("");
 //      String serverPort = "";
 //      Integer port = request.getServerPort();
-//
 //      过滤掉端口80
 //      if (!Objects.equals(port, 80)) {
 //      将端口号转换为字符串并添加前缀":"
 //      serverPort = ":" + String.valueOf(port);
-//}
-
         String fullShortUrl = serverName + serverPort + "/" + shortUri;
         String redisKey = String.format(RedisKeyConstant.GOTO_SHORT_LINK_KEY, fullShortUrl);
         String originLink = stringRedisTemplate.opsForValue().get(redisKey);
