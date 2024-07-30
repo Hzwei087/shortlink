@@ -1,6 +1,7 @@
 package com.nageoffer.shortlink.admin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -26,10 +27,12 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.nageoffer.shortlink.admin.common.constant.RedisCacheConstant.LOCK_USER_REGISTER_KEY;
+import static com.nageoffer.shortlink.admin.common.constant.RedisCacheConstant.USER_LOGIN_KEY;
 import static com.nageoffer.shortlink.admin.common.enums.UserErrorCodeEnum.USER_NAME_EXIST;
 
 /**
@@ -105,9 +108,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
 
     @Override
     public UserLoginRespDTO login(UserLoginReqDTO requestParam) {
-        if (stringRedisTemplate.hasKey(RedisCacheConstant.USER_LOGIN_PREFIX +requestParam.getUsername())){
-            throw new ClientException(UserErrorCodeEnum.USER_ALREADY_LOGIN);
-        }
         LambdaQueryWrapper<UserDO> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper
                 .eq(UserDO::getUsername,requestParam.getUsername())
@@ -117,23 +117,42 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
         if (userDo == null){
             throw new ClientException(UserErrorCodeEnum.USER_NULL);
         }
+        //仅允许用户单端登录
+//        Boolean hasLogin = stringRedisTemplate.hasKey(RedisCacheConstant.USER_LOGIN_PREFIX + requestParam.getUsername());
+//        if (hasLogin && hasLogin != null){
+//            throw new ClientException(UserErrorCodeEnum.USER_ALREADY_LOGIN);
+//        }
+        //可允许同一用户多端登录
+        Map<Object, Object> hasLoginMap = stringRedisTemplate.opsForHash().entries(USER_LOGIN_KEY + requestParam.getUsername());
+        //Key是USER_LOGIN_KEY + requestParam.getUsername(), hashkey是uudi, value是userdo的json序列
+        //entries(...)方法返回存储在该键下的所有字段和值，作为一个Map<Object, Object>对象。
+        if (CollUtil.isNotEmpty(hasLoginMap)) {
+            stringRedisTemplate.expire(USER_LOGIN_KEY + requestParam.getUsername(), 30L, TimeUnit.MINUTES);
+            //将hasLoginMap中的键集合转换为流（stream）
+            String token = hasLoginMap.keySet().stream()
+                    .findFirst()
+                    .map(Object::toString)
+                    .orElseThrow(() -> new ClientException("用户登录错误"));
+            return new UserLoginRespDTO(token);
+        }
+
         String uuid = UUID.randomUUID().toString();
 //        stringRedisTemplate.opsForValue().set(uuid, JSON.toJSONString(userDo),30L, TimeUnit.MINUTES);
-        stringRedisTemplate.opsForHash().put(RedisCacheConstant.USER_LOGIN_PREFIX + requestParam.getUsername(),uuid,JSON.toJSONString(userDo));
-        stringRedisTemplate.expire(RedisCacheConstant.USER_LOGIN_PREFIX + requestParam.getUsername(),120L, TimeUnit.MINUTES);
+        stringRedisTemplate.opsForHash().put(RedisCacheConstant.USER_LOGIN_KEY + requestParam.getUsername(),uuid,JSON.toJSONString(userDo));
+        stringRedisTemplate.expire(RedisCacheConstant.USER_LOGIN_KEY + requestParam.getUsername(),30L, TimeUnit.MINUTES);
         return new UserLoginRespDTO(uuid);
 
     }
 
     @Override
     public Boolean checkLogin(String username, String token) {
-        return stringRedisTemplate.opsForHash().get(RedisCacheConstant.USER_LOGIN_PREFIX + username, token) != null ;
+        return stringRedisTemplate.opsForHash().get(RedisCacheConstant.USER_LOGIN_KEY + username, token) != null ;
     }
 
     @Override
     public void logOut(String username, String token) {
         if(checkLogin(username, token)){
-            stringRedisTemplate.delete(RedisCacheConstant.USER_LOGIN_PREFIX + username);
+            stringRedisTemplate.delete(RedisCacheConstant.USER_LOGIN_KEY + username);
             return;
         }else {
             throw new ClientException(UserErrorCodeEnum.USER_UN_LOGIN);

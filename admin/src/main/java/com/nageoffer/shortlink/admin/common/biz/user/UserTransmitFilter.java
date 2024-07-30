@@ -56,7 +56,7 @@ public class UserTransmitFilter implements Filter {
                 }
                 Object userInfoJasonStr;
                 try {
-                    userInfoJasonStr = stringRedisTemplate.opsForHash().get(RedisCacheConstant.USER_LOGIN_PREFIX + username,token);
+                    userInfoJasonStr = stringRedisTemplate.opsForHash().get(RedisCacheConstant.USER_LOGIN_KEY + username,token);
                     if (userInfoJasonStr == null){
 //                        throw new ClientException(UserErrorCodeEnum.USER_TOKEN_FAIL);
                         returnJason((HttpServletResponse) servletResponse,JSON.toJSONString(Results.failure(new ClientException(UserErrorCodeEnum.USER_TOKEN_FAIL))));
