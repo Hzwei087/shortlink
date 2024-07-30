@@ -38,14 +38,20 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
 
     @Override
     public IPage<ShortLinkPageRespDTO> pageRecycleShortLink(ShortLinkRecycleBinPageReqDTO requestParam) {
-        LambdaQueryWrapper<ShortLinkDO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper
-                .in(ShortLinkDO::getGid, requestParam.getGidList())//在该用户的所有gid的集合范围内
-                .eq(ShortLinkDO::getDelFlag, 0)
-                .eq(ShortLinkDO::getEnableStatus, 1)
-                .orderByDesc(ShortLinkDO::getUpdateTime);
-        IPage<ShortLinkDO> resultPage = baseMapper.selectPage(requestParam, queryWrapper);
-        return resultPage.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
+//        LambdaQueryWrapper<ShortLinkDO> queryWrapper = new LambdaQueryWrapper<>();
+//        queryWrapper
+//                .in(ShortLinkDO::getGid, requestParam.getGidList())//在该用户的所有gid的集合范围内
+//                .eq(ShortLinkDO::getDelFlag, 0)
+//                .eq(ShortLinkDO::getEnableStatus, 1)
+//                .orderByDesc(ShortLinkDO::getUpdateTime);
+//        IPage<ShortLinkDO> resultPage = baseMapper.selectPage(requestParam, queryWrapper);
+//        return resultPage.convert(each -> BeanUtil.toBean(each, ShortLinkPageRespDTO.class));
+        IPage<ShortLinkDO> resultPage = baseMapper.pageRecycleBinLink(requestParam);
+        return resultPage.convert(each -> {
+            ShortLinkPageRespDTO result = BeanUtil.toBean(each, ShortLinkPageRespDTO.class);
+            result.setDomain("http://" + result.getDomain());
+            return result;
+        });
     }
 
     @Override
@@ -76,9 +82,11 @@ public class RecycleBinServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLin
         lambdaUpdateWrapper.eq(ShortLinkDO::getGid, requestParam.getGid())
                 .eq(ShortLinkDO::getFullShortUrl, requestParam.getFullShortUrl())
                 .eq(ShortLinkDO::getEnableStatus,1)
+                .eq(ShortLinkDO::getDelTime, 0L)
                 .eq(ShortLinkDO::getDelFlag,0);
         ShortLinkDO shortLinkDO = new ShortLinkDO();
         shortLinkDO.setDelFlag(1);
+        shortLinkDO.setDelTime(System.currentTimeMillis());
         baseMapper.update(shortLinkDO,lambdaUpdateWrapper);
 
     }
