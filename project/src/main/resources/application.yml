@@ -6,8 +6,10 @@ mybatis-plus:
   #      logic-not-delete-value: 0  //未删除 默认
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
 server:
   port: 8001
+
 spring:
   mvc:
     view:
@@ -34,12 +36,21 @@ spring:
       host: 127.0.0.1
       port: 6379
       database: 0
+
 short-link:
   domain:
     default: nurl.ink:8001
-
   stats:
     locale:
       amap-key: 6bcea25e49d09a5d9544c967b57a5ab3
+  goto-domain:
+    white-list:
+      enable: true
+      names: '拿个offer,知乎,博客园'
+      details:
+        - nageoffer.com
+        - zhihu.com
+        - juejin.cn
+        - cnblogs.com
 
 

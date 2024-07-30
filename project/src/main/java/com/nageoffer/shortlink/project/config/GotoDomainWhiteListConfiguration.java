@@ -30,6 +30,7 @@ import java.util.List;
 @Data
 @Component
 @ConfigurationProperties(prefix = "short-link.goto-domain.white-list")
+//字段的名称与配置文件的key要一一对应上，路径前缀在上面已标识
 public class GotoDomainWhiteListConfiguration {
 
     /**
