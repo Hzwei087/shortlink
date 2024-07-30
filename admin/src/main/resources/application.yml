@@ -30,3 +30,10 @@ mybatis-plus:
   #      logic-not-delete-value: 0  //未删除 默认
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+short-link:
+  group:
+    max-num: 20
+  flow-limit:
+    enable: true
+    time-window: 1
+    max-access-count: 20

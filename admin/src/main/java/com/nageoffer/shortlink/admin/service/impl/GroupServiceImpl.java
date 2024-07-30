@@ -1,10 +1,12 @@
 package com.nageoffer.shortlink.admin.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.nageoffer.shortlink.admin.common.biz.user.UserContext;
+import com.nageoffer.shortlink.admin.common.constant.RedisCacheConstant;
 import com.nageoffer.shortlink.admin.common.convention.exception.ClientException;
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
 import com.nageoffer.shortlink.admin.common.enums.GroupErrorCodeEnum;
@@ -17,8 +19,12 @@ import com.nageoffer.shortlink.admin.remote.dto.ShortLinkRemoteService;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.nageoffer.shortlink.admin.service.GroupService;
 import com.nageoffer.shortlink.admin.utils.RandomStringUtil;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -27,10 +33,13 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implements GroupService {
 
-    @Autowired
-    private GroupMapper groupMapper;
+    @Value("${short-link.group.max-num}")
+    private Integer groupMaxNum;
+
+    private final RedissonClient redissonClient;
 
     ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService(){};
 
@@ -41,31 +50,38 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
 
     @Override
     public void saveGroup(String username, String groupName) {
-        //查询此组名是否被使用
-        LambdaQueryWrapper<GroupDO> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(GroupDO::getUsername,username);
-        queryWrapper.eq(GroupDO::getName, groupName);
-        if (baseMapper.exists(queryWrapper)) {
-            throw new ClientException(GroupErrorCodeEnum.GROUP_NAME_EXIST);
+        RLock lock = redissonClient.getLock(String.format(RedisCacheConstant.LOCK_GROUP_CREATE_KEY, username));
+        lock.lock();
+        try {
+            LambdaQueryWrapper<GroupDO> groupSizeQueryWrapper = new LambdaQueryWrapper<>();
+            groupSizeQueryWrapper.eq(GroupDO::getUsername,username);
+            groupSizeQueryWrapper.eq(GroupDO::getDelFlag,0);
+            List<GroupDO> groupDOList = baseMapper.selectList(groupSizeQueryWrapper);
+            if(CollUtil.isNotEmpty(groupDOList) && groupDOList.size() == groupMaxNum){
+                throw new ClientException(String.format("已超出最大分组数：%d", groupMaxNum));
+            }
+
+            String gid = RandomStringUtil.generateRandom();
+            LambdaQueryWrapper<GroupDO> gidQueryWrapper = new LambdaQueryWrapper<>();
+            gidQueryWrapper.eq(GroupDO::getGid, gid)
+                    .eq(GroupDO::getUsername, Optional.ofNullable(username).orElse(UserContext.getUsername()));
+            while (baseMapper.exists(gidQueryWrapper)) {
+                gid = RandomStringUtil.generateRandom();
+                gidQueryWrapper.eq(GroupDO::getGid, gid);
+            }
+            GroupDO groupDO = GroupDO.builder()
+                    .gid(gid)
+                    .name(groupName)
+                    .username(Optional.ofNullable(username).orElse(UserContext.getUsername()))
+                    .sortOrder(0)
+                    .build();
+            baseMapper.insert(groupDO);
+
+        }finally {
+            lock.unlock();
         }
 
-        String gid = RandomStringUtil.generateRandom();
-        LambdaQueryWrapper<GroupDO> gidQueryWrapper = new LambdaQueryWrapper<>();
-        gidQueryWrapper.eq(GroupDO::getGid, gid)
-                .eq(GroupDO::getUsername, Optional.ofNullable(username).orElse(UserContext.getUsername()));
 
-        while (baseMapper.exists(gidQueryWrapper)) {
-            gid = RandomStringUtil.generateRandom();
-            gidQueryWrapper.eq(GroupDO::getGid, gid);
-        }
-
-        GroupDO groupDO = GroupDO.builder()
-                .gid(gid)
-                .name(groupName)
-                .username(Optional.ofNullable(username).orElse(UserContext.getUsername()))
-                .sortOrder(0)
-                .build();
-        baseMapper.insert(groupDO);
 
     }
 

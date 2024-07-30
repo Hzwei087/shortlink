@@ -1,4 +1,4 @@
-package com.nageoffer.shortlink.admin.remote.dto.req;
+package com.nageoffer.shortlink.admin.dto.req;
 
 import lombok.Data;
 
