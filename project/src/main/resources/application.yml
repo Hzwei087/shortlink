@@ -52,5 +52,15 @@ short-link:
         - zhihu.com
         - juejin.cn
         - cnblogs.com
+rocketmq:
+  name-server: common-rocketmq-dev.magestack.cn:9876
+  producer:
+    group: short-link_project-service_stats-save_pg_flyday
+    topic: short-link_project-service_topic
+    send-message-timeout: 2000
+    retry-times-when-send-failed: 1
+    retry-times-when-send-async-failed: 1
+  consumer:
+    group: short-link_project-service_stats-save_cg_flyday
 
 

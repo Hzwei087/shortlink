@@ -15,10 +15,6 @@ import java.util.Date;
 @TableName("t_link_access_stats")
 public class LinkAccessStatsDO extends BaseDO {
 
-    /**
-     * 分组标识
-     */
-    private String gid;
 
     /**
      * 完整短链接

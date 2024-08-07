@@ -14,10 +14,6 @@ import java.util.Date;
 @AllArgsConstructor
 @TableName("t_link_stats_today")
 public class LinkStatsTodayDO extends BaseDO {
-    /**
-     * 分组标识
-     */
-    private String gid;
 
     /**
      * 短链接

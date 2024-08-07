@@ -10,12 +10,6 @@ dataSources:
 rules:
   - !SHARDING
     tables:
-      t_link_stats_today:
-        actualDataNodes: ds_0.t_link_stats_today_${0..15}
-        tableStrategy:
-          standard:
-            shardingColumn: gid
-            shardingAlgorithmName: link_stats_table_hash_mod
       t_link_goto:
         actualDataNodes: ds_0.t_link_goto_${0..15}
         tableStrategy:
@@ -31,10 +25,6 @@ rules:
     bindingTables:
       - t_link, t_link_stats_today
     shardingAlgorithms:
-      link_stats_table_hash_mod:
-        type: HASH_MOD
-        props:
-          sharding-count: 16
       link_goto_table_hash_mod:
         type: HASH_MOD
         props:

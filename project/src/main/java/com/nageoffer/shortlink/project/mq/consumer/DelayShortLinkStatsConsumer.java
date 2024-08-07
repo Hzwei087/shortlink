@@ -21,7 +21,6 @@ import static com.nageoffer.shortlink.project.common.constant.RedisKeyConstant.D
 
 /**
  * 延迟记录短链接统计组件
- * 公众号：马丁玩编程，回复：加群，添加马哥微信（备注：link）获取项目资料
  */
 @Deprecated
 @Slf4j
@@ -34,20 +33,23 @@ public class DelayShortLinkStatsConsumer implements InitializingBean {
     private final MessageQueueIdempotentHandler messageQueueIdempotentHandler;
 
     public void onMessage() {
+        //创建一个单线程执行器，用于处理消费任务。
         Executors.newSingleThreadExecutor(
                         runnable -> {
                             Thread thread = new Thread(runnable);
                             thread.setName("delay_short-link_stats_consumer");
-                            thread.setDaemon(Boolean.TRUE);
+                            thread.setDaemon(true);
                             return thread;
                         })
                 .execute(() -> {
                     RBlockingDeque<ShortLinkStatsRecordDTO> blockingDeque = redissonClient.getBlockingDeque(DELAY_QUEUE_STATS_KEY);
                     RDelayedQueue<ShortLinkStatsRecordDTO> delayedQueue = redissonClient.getDelayedQueue(blockingDeque);
                     for (; ; ) {
+                        //无限循环
                         try {
                             ShortLinkStatsRecordDTO statsRecord = delayedQueue.poll();
                             if (statsRecord != null) {
+                                //检查消息是否正在被消费。
                                 if (messageQueueIdempotentHandler.isMessageBeingConsumed(statsRecord.getKeys())) {
                                     // 判断当前的这个消息流程是否执行完成
                                     if (messageQueueIdempotentHandler.isAccomplish(statsRecord.getKeys())) {
@@ -65,6 +67,7 @@ public class DelayShortLinkStatsConsumer implements InitializingBean {
                                 continue;
                             }
                             LockSupport.parkUntil(500);
+                            //暂停当前线程 500 毫秒。
                         } catch (Throwable ignored) {
                         }
                     }
@@ -73,6 +76,6 @@ public class DelayShortLinkStatsConsumer implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        // onMessage();
+        // onMessage();springboot启动时调用这个方法
     }
 }

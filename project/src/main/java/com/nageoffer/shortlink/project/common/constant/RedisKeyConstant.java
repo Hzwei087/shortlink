@@ -4,17 +4,17 @@ public class RedisKeyConstant {
     /**
      * 短链接跳转前缀key
      */
-    public static final String GOTO_SHORT_LINK_KEY = "short-link_goto_%s";
+    public static final String GOTO_SHORT_LINK_KEY = "short-link:goto:%s";
 
     /**
      * 短链接跳转锁前缀key
      */
-    public static final String LOCK_GOTO_SHORT_LINK_KEY = "short-link_lock_goto_%s";
+    public static final String LOCK_GOTO_SHORT_LINK_KEY = "short-link:lock:goto:%s";
 
     /**
      * 短链接空值跳转
      */
-    public static final String GOTO_IS_NULL_SHORT_LINK_KEY = "short-link_is_null_goto_%s";
+    public static final String GOTO_IS_NULL_SHORT_LINK_KEY = "short-link:is-null:goto_%s";
 
     /**
      * 短链接修改分组 ID 锁前缀 Key

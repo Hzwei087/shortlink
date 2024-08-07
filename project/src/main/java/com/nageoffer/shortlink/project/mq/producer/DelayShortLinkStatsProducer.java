@@ -15,7 +15,6 @@ import static com.nageoffer.shortlink.project.common.constant.RedisKeyConstant.D
 
 /**
  * 延迟消费短链接统计发送者
- * 公众号：马丁玩编程，回复：加群，添加马哥微信（备注：link）获取项目资料
  */
 @Component
 @Deprecated
@@ -32,7 +31,9 @@ public class DelayShortLinkStatsProducer {
     public void send(ShortLinkStatsRecordDTO statsRecord) {
         statsRecord.setKeys(UUID.fastUUID().toString());
         RBlockingDeque<ShortLinkStatsRecordDTO> blockingDeque = redissonClient.getBlockingDeque(DELAY_QUEUE_STATS_KEY);
+        //从 redissonClient 获取一个阻塞队列 blockingDeque，用于存储 ShortLinkStatsRecordDTO 类型的对象。
         RDelayedQueue<ShortLinkStatsRecordDTO> delayedQueue = redissonClient.getDelayedQueue(blockingDeque);
+        //创建一个延迟队列 delayedQueue，将之前获取的阻塞队列 blockingDeque 作为基础队列。
         delayedQueue.offer(statsRecord, 5, TimeUnit.SECONDS);
     }
 }
