@@ -9,13 +9,13 @@ import com.nageoffer.shortlink.admin.common.biz.user.UserContext;
 import com.nageoffer.shortlink.admin.common.constant.RedisCacheConstant;
 import com.nageoffer.shortlink.admin.common.convention.exception.ClientException;
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
-import com.nageoffer.shortlink.admin.common.enums.GroupErrorCodeEnum;
 import com.nageoffer.shortlink.admin.dao.entity.GroupDO;
 import com.nageoffer.shortlink.admin.dao.mapper.GroupMapper;
 import com.nageoffer.shortlink.admin.dto.req.ShortLinkGroupSortReqDTO;
 import com.nageoffer.shortlink.admin.dto.req.ShortLinkGroupUpadteReqDTO;
 import com.nageoffer.shortlink.admin.dto.resp.ShortLinkGroupRespDTO;
-import com.nageoffer.shortlink.admin.remote.dto.ShortLinkRemoteService;
+import com.nageoffer.shortlink.admin.remote.ShortLinkActualRemoteService;
+import com.nageoffer.shortlink.admin.remote.ShortLinkRemoteService;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkGroupCountQueryRespDTO;
 import com.nageoffer.shortlink.admin.service.GroupService;
 import com.nageoffer.shortlink.admin.utils.RandomStringUtil;
@@ -23,7 +23,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -39,9 +38,11 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
     @Value("${short-link.group.max-num}")
     private Integer groupMaxNum;
 
+    private final ShortLinkActualRemoteService shortLinkActualRemoteService;
+
     private final RedissonClient redissonClient;
 
-    ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService(){};
+//    ShortLinkRemoteService shortLinkRemoteService = new ShortLinkRemoteService(){};
 
     @Override
     public void saveGroup(String groupName) {
@@ -100,7 +101,7 @@ public class GroupServiceImpl extends ServiceImpl<GroupMapper, GroupDO> implemen
         List<String> groupIds = groupDOList.stream()//将 groupDOList（一个 List<GroupDO>）转换为一个流（Stream）。流是一种支持顺序和并行聚合操作的数据视图。
                 .map(GroupDO::getGid)//使用 map 方法将流中的每个 GroupDO 对象转换为其 gid。 GroupDO::getGid 是一个方法引用，表示对流中的每个 GroupDO 对象调用 getGid() 方法。这会生成一个新的流，其中包含了原始流中每个 GroupDO 对象的 gid
                 .collect(Collectors.toList());//使用 collect 方法将流中的元素收集到一个 List 中。Collectors.toList() 是一个收集器，表示将流中的元素收集到一个新的 List 中。
-        Result<List<ShortLinkGroupCountQueryRespDTO>> listResult = shortLinkRemoteService.listGroupShortLinkCount(groupIds);
+        Result<List<ShortLinkGroupCountQueryRespDTO>> listResult = shortLinkActualRemoteService.listGroupShortLinkCount(groupIds);
 
         // 转换 listResult 为 Map 以提高查找效率
         Map<String, Integer> shortLinkCountMap = listResult.getData().stream()

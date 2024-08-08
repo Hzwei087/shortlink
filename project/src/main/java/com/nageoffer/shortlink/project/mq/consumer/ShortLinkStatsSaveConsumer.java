@@ -1,19 +1,3 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
 package com.nageoffer.shortlink.project.mq.consumer;
 
@@ -38,16 +22,11 @@ import org.redisson.api.RLock;
 import org.redisson.api.RReadWriteLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.connection.stream.MapRecord;
-import org.springframework.data.redis.connection.stream.RecordId;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.data.redis.stream.StreamListener;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 import static com.nageoffer.shortlink.project.common.constant.RedisKeyConstant.LOCK_GID_UPDATE_KEY;
 import static com.nageoffer.shortlink.project.common.constant.ShortLinkConstant.AMAP_REMOTE_URL;
@@ -59,7 +38,7 @@ import static com.nageoffer.shortlink.project.common.constant.ShortLinkConstant.
 @Component
 @RequiredArgsConstructor
 @RocketMQMessageListener(
-        topic = "${rocketMQ.producer.topic}",
+        topic = "${rocketmq.producer.topic}",
         consumerGroup = "${rocketmq.consumer.group}"
 )
 //public class ShortLinkStatsSaveConsumer implements StreamListener<String, MapRecord<String, String, String>>{
@@ -76,38 +55,10 @@ public class ShortLinkStatsSaveConsumer implements RocketMQListener<Map<String, 
     private final LinkDeviceStatsMapper linkDeviceStatsMapper;
     private final LinkNetworkStatsMapper linkNetworkStatsMapper;
     private final LinkStatsTodayMapper linkStatsTodayMapper;
-    private final StringRedisTemplate stringRedisTemplate;
     private final MessageQueueIdempotentHandler messageQueueIdempotentHandler;
 
     @Value("${short-link.stats.locale.amap-key}")
     private String statsLocaleAmapKey;
-
-//    @Override
-//    public void onMessage(MapRecord<String, String, String> message) {
-//        String stream = message.getStream();
-//        RecordId id = message.getId();
-//        //判断当前这个消息是否被消费过
-//        if (messageQueueIdempotentHandler.isMessageBeingConsumed(id.toString())) {
-//            // 判断当前的这个消息流程是否执行完成，若完成则终止方法，未完成则不断充实等待IDEMPOTENT_KEY_PREFIX + messageId的key消亡，消亡后会判定此消息没被消费过，继续走下面的消费逻辑
-//            if (messageQueueIdempotentHandler.isAccomplish(id.toString())) {
-//                return;
-//                //终止 onMessage 方法的执行
-//            }
-//            throw new ServiceException("消息未完成流程，需要消息队列重试");
-//        }
-//        try {
-//            Map<String, String> producerMap = message.getValue();
-//            ShortLinkStatsRecordDTO statsRecord = JSON.parseObject(producerMap.get("statsRecord"), ShortLinkStatsRecordDTO.class);
-//            actualSaveShortLinkStats(statsRecord);
-//            stringRedisTemplate.opsForStream().delete(Objects.requireNonNull(stream), id.getValue());
-//        } catch (Throwable ex) {
-//            // 某某某情况宕机了
-//            messageQueueIdempotentHandler.delMessageProcessed(id.toString());
-//            log.error("记录短链接监控消费异常", ex);
-//            throw ex;
-//        }
-//        messageQueueIdempotentHandler.setAccomplish(id.toString());
-//    }
 
     @Override
     public void onMessage(Map<String, String> producerMap) {
@@ -119,9 +70,8 @@ public class ShortLinkStatsSaveConsumer implements RocketMQListener<Map<String, 
             throw new ServiceException("消息未完成流程，需要消息队列重试");
         }
         try{
-            String fullshortUtl = producerMap.get("fullshortUtl");
-            if(StrUtil.isNotBlank(fullshortUtl)){
-                String gid = producerMap.get("gid");
+            String fullShortUrl = producerMap.get("fullShortUrl");
+            if(StrUtil.isNotBlank(fullShortUrl)){
                 ShortLinkStatsRecordDTO statsRecord = JSON.parseObject(producerMap.get("statsRecord"), ShortLinkStatsRecordDTO.class);
                 actualSaveShortLinkStats(statsRecord);
             }
@@ -139,8 +89,6 @@ public class ShortLinkStatsSaveConsumer implements RocketMQListener<Map<String, 
 
 
     }
-
-
 
     public void actualSaveShortLinkStats(ShortLinkStatsRecordDTO statsRecord) {
         String fullShortUrl = statsRecord.getFullShortUrl();

@@ -1,104 +1,90 @@
-package com.nageoffer.shortlink.admin.remote.dto;
+package com.nageoffer.shortlink.admin.remote;
 
 import cn.hutool.http.HttpUtil;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.nageoffer.shortlink.admin.common.convention.result.Result;
-import com.nageoffer.shortlink.admin.dto.req.*;
+import com.nageoffer.shortlink.admin.dto.req.RecycleBinRecoverReqDTO;
+import com.nageoffer.shortlink.admin.dto.req.RecycleBinRemoveReqDTO;
+import com.nageoffer.shortlink.admin.dto.req.RecycleBinSaveReqDTO;
 import com.nageoffer.shortlink.admin.dto.resp.ShortLinkBatchCreateRespDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.*;
 import com.nageoffer.shortlink.admin.remote.dto.resp.*;
 import org.apache.commons.collections4.map.HashedMap;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 
-public interface ShortLinkRemoteService {
+/**
+ * 短链接中台远程调用服务
+ */
+@FeignClient("short-link-project")
+public interface ShortLinkActualRemoteService {
     /**
      * 创建短链接
      * @param requestParam
      * @return
      */
-    default Result<ShortLinkCreateRespDTO> createShortLink(ShortLinkCreateReqDTO requestParam){
-
-        String resultBodyStr = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/create",JSON.toJSONString(requestParam));
-        return JSON.parseObject(resultBodyStr, new TypeReference<Result<ShortLinkCreateRespDTO>>() {
-        });
-    };
+    @PostMapping("/api/short-link/v1/create")
+    Result<ShortLinkCreateRespDTO> createShortLink(@RequestBody ShortLinkCreateReqDTO requestParam);
 
     /**
      * 批量创建短链接
      */
     @PostMapping("/api/short-link/v1/create/batch")
-    default Result<ShortLinkBatchCreateRespDTO> batchCreateShortLink(@RequestBody ShortLinkBatchCreateReqDTO requestParam) {
-        String resultBodyStr = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/create/batch",JSON.toJSONString(requestParam));
-        return JSON.parseObject(resultBodyStr, new TypeReference<Result<ShortLinkBatchCreateRespDTO>>() {
-        });
-    }
+    Result<ShortLinkBatchCreateRespDTO> batchCreateShortLink(@RequestBody ShortLinkBatchCreateReqDTO requestParam);
 
     /**
      * 分页查询短链接
-     * @param requestParam
+     * @param gid
+     * @param orderTag
+     * @param current
+     * @param size
      * @return
      */
-    default Result<IPage<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam){
-        Map<String, Object> requestMap = new HashedMap<>();
-        requestMap.put("gid", requestParam.getGid());
-        requestMap.put("size", requestParam.getSize());
-        requestMap.put("orderTag", requestParam.getOrderTag());
-        requestMap.put("current", requestParam.getCurrent());
-        String resultPageStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/page", requestMap);
+    @GetMapping("/api/short-link/v1/page")
+    Result<Page<ShortLinkPageRespDTO>> pageShortLink(@RequestParam("gid") String gid,
+                                                     @RequestParam("orderTag") String orderTag,
+                                                     @RequestParam("current") Long current,
+                                                     @RequestParam("size") Long size);
 
-        return JSON.parseObject(resultPageStr, new TypeReference<Result<IPage<ShortLinkPageRespDTO>>>() {
-        });
-    }
-
-    ;
     /**
      * 查询分组内短链接数量
      */
+    @PutMapping("/api/short-link/v1/count")
+    Result<List<ShortLinkGroupCountQueryRespDTO>> listGroupShortLinkCount(@RequestParam("requestParam") List<String> requestParam);
 
-    default Result<List<ShortLinkGroupCountQueryRespDTO>> listGroupShortLinkCount(List<String> requestParam){
-        Map<String, Object> requestMap = new HashedMap<>();
-        requestMap.put("requestParam", requestParam);
-        String resultPageStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/count",requestMap);
-
-        return JSON.parseObject(resultPageStr, new TypeReference<Result<List<ShortLinkGroupCountQueryRespDTO>>>() {
-        });
-    };
     /**
      * 短链接信息修改
      */
-    default void updateShortLink(ShortLinkUpdateReqDTO requestParam){
-        String resultBodyStr = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/update",JSON.toJSONString(requestParam));
-    }
+    @PostMapping("/api/short-link/v1/update")
+    void updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam);
 
-    default Result<String> getTitleByUrl(String url){
-        String resultStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/title?url=" + url);
-        return JSON.parseObject(resultStr, new TypeReference<Result<String>>(){});
-    }
+    /**
+     * 根据链接获取标题
+     * @param url
+     * @return
+     */
+    @GetMapping("/api/short-link/v1/title")
+    Result<String> getTitleByUrl(@RequestParam("url") String url);
+
     /**
      * 短链接转移入回收站
      */
-    default void saveRecycleBin(RecycleBinSaveReqDTO requestParam){
-        String resultBodyStr = HttpUtil.post("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/save",JSON.toJSONString(requestParam));
-    }
+    @PostMapping("/api/short-link/v1/recycle-bin/save")
+    void saveRecycleBin(@RequestBody RecycleBinSaveReqDTO requestParam);
+
     /**
      * 分页查询回收站中的短链接
      */
-    default  Result<IPage<ShortLinkPageRespDTO>> pageRecycleBinShortLink(ShortLinkRecycleBinPageReqDTO requestParam){
-        Map<String, Object> requestMap = new HashedMap<>();
-        requestMap.put("gidList",requestParam.getGidList());
-        requestMap.put("size",requestParam.getSize());
-        requestMap.put("current", requestParam.getCurrent());
-        String resultPageStr = HttpUtil.get("http://127.0.0.1:8001/api/short-link/v1/recycle-bin/page",requestMap);
-
-        return JSON.parseObject(resultPageStr, new TypeReference<Result<IPage<ShortLinkPageRespDTO>>>() {
-        });
-    };
+    @GetMapping("/api/short-link/v1/recycle-bin/page")
+    Result<Page<ShortLinkPageRespDTO>> pageRecycleBinShortLink(@RequestParam("gidList") List<String> gidList,
+                                                                @RequestParam("size") Long size,
+                                                                @RequestParam("current") Long current);
     /**
      * 恢复回收站中的短链接
      */
@@ -173,5 +159,6 @@ public interface ShortLinkRemoteService {
         return JSON.parseObject(resultPageStr, new TypeReference<Result<IPage<ShortLinkStatsAccessRecordRespDTO>>>() {
         });
     };
+
 
 }

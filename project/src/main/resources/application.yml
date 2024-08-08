@@ -1,16 +1,12 @@
-mybatis-plus:
-  #  global-config:
-  #    db-config:
-  #      logic-delete-field: is_deleted //与实体类逻辑删除字段的注解二选一
-  #      logic-delete-value: 1  //删除 默认
-  #      logic-not-delete-value: 0  //未删除 默认
-  configuration:
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
-
 server:
   port: 8001
-
 spring:
+  application:
+    name: short-link-project
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 127.0.0.1:8848
   mvc:
     view:
       prefix: /templates/
@@ -56,11 +52,19 @@ rocketmq:
   name-server: common-rocketmq-dev.magestack.cn:9876
   producer:
     group: short-link_project-service_stats-save_pg_flyday
-    topic: short-link_project-service_topic
+    topic: short-link_project-service_topic_flyday
     send-message-timeout: 2000
     retry-times-when-send-failed: 1
     retry-times-when-send-async-failed: 1
   consumer:
     group: short-link_project-service_stats-save_cg_flyday
+mybatis-plus:
+  #  global-config:
+  #    db-config:
+  #      logic-delete-field: is_deleted //与实体类逻辑删除字段的注解二选一
+  #      logic-delete-value: 1  //删除 默认
+  #      logic-not-delete-value: 0  //未删除 默认
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 
