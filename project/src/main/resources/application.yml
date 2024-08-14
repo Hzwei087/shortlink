@@ -42,12 +42,13 @@ short-link:
   goto-domain:
     white-list:
       enable: true
-      names: '拿个offer,知乎,博客园'
+      names: '拿个offer,知乎,博客园,bilibili'
       details:
         - nageoffer.com
         - zhihu.com
         - juejin.cn
         - cnblogs.com
+        - bilibili.com
 rocketmq:
   name-server: common-rocketmq-dev.magestack.cn:9876
   producer:

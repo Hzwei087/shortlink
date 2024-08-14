@@ -32,8 +32,6 @@ public class ShortLinkUpdateReqDTO {
      */
     private String originGid;
 
-
-
     /**
      * 有效期类型 0 永久有效 1自定义
      */

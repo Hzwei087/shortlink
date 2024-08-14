@@ -32,11 +32,13 @@ public class RecycleBinController {
         IPage<ShortLinkPageRespDTO> result = recycleBinService.pageRecycleShortLink(requestParam);
         return Results.success(result);
     }
+
     @PostMapping("/api/short-link/v1/recycle-bin/recover")
     public Result<Void> recoverRecycleBin(@RequestBody RecycleBinRecoverReqDTO requestParam){
         recycleBinService.recoverRecycleBin(requestParam);
         return Results.success();
     }
+
     @PostMapping("/api/short-link/v1/recycle-bin/remove")
     public Result<Void> removeRecycleBin(@RequestBody RecycleBinRemoveReqDTO requestParam){
         recycleBinService.removeRecycleBin(requestParam);
