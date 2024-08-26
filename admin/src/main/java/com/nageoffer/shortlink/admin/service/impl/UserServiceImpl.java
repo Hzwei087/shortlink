@@ -141,6 +141,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
                     .orElseThrow(() -> new ClientException("用户登录错误"));
             return new UserLoginRespDTO(token);
         }
+        /**
+         * Hash
+         * Key：login_用户名
+         * Value：
+         *  Key：token标识
+         *  Val：JSON 字符串（用户信息）
+         */
 
         String uuid = UUID.randomUUID().toString();
 //        stringRedisTemplate.opsForValue().set(uuid, JSON.toJSONString(userDo),30L, TimeUnit.MINUTES);
@@ -161,7 +168,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDO> implements 
             stringRedisTemplate.delete(RedisCacheConstant.USER_LOGIN_KEY + username);
             return;
         }else {
-            throw new ClientException(UserErrorCodeEnum.USER_UN_LOGIN);
+            throw new ClientException("用户Token不存在或用户未登录");
         }
 
     }

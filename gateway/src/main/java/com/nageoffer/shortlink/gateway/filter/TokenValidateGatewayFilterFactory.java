@@ -20,9 +20,12 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
-
+/**
+ * SpringCloud Gateway Token 拦截器
+ */
 @Component
 public class TokenValidateGatewayFilterFactory extends AbstractGatewayFilterFactory<Config> {
+    //在TokenValidateGatewayFilterFactory类中，通过继承AbstractGatewayFilterFactory<Config>，Spring会自动将配置文件中对应的配置项绑定到Config对象中。
 
     private final StringRedisTemplate stringRedisTemplate;
 
