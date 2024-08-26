@@ -35,9 +35,6 @@ public class RecycleBinServiceImpl implements RecycleBinService {
         }
         List<String> list = groupDOList.stream().map(GroupDO::getGid).toList();
         requestParam.setGidList(list);
-        return shortLinkActualRemoteService.pageRecycleBinShortLink(
-                requestParam.getGidList(),
-                requestParam.getSize(),
-                requestParam.getCurrent());
+        return shortLinkActualRemoteService.pageRecycleBinShortLink(requestParam);
     }
 }

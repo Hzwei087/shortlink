@@ -61,11 +61,7 @@ public class ShortLinkController {
     @GetMapping("/api/short-link/admin/v1/page")
     public Result<Page<ShortLinkPageRespDTO>> pageShortLink(ShortLinkPageReqDTO requestParam) {
         //用ipage接口无法反序列化，要用Page类
-        return shortLinkActualRemoteService.pageShortLink(
-                requestParam.getGid(),
-                requestParam.getOrderTag(),
-                requestParam.getCurrent(),
-                requestParam.getSize());
+        return shortLinkActualRemoteService.pageShortLink(requestParam);
     }
 
     /**
@@ -82,12 +78,7 @@ public class ShortLinkController {
      */
     @GetMapping("/api/short-link/admin/v1/stats")
     public Result<ShortLinkStatsRespDTO> shortLinkStats(ShortLinkStatsReqDTO requestParam) {
-        return shortLinkActualRemoteService.oneShortLinkStats(
-                requestParam.getFullShortUrl(),
-                requestParam.getGid(),
-                requestParam.getEnableStatus() ,
-                requestParam.getEndDate(),
-                requestParam.getStartDate());
+        return shortLinkActualRemoteService.oneShortLinkStats(requestParam);
     }
 
     /**
@@ -95,10 +86,7 @@ public class ShortLinkController {
      */
     @GetMapping("/api/short-link/admin/v1/stats/group")
     public Result<ShortLinkStatsRespDTO> groupShortLinkStats(ShortLinkGroupStatsReqDTO requestParam) {
-        return shortLinkActualRemoteService.groupShortLinkStats(
-                requestParam.getGid(),
-                requestParam.getEndDate(),
-                requestParam.getStartDate());
+        return shortLinkActualRemoteService.groupShortLinkStats(requestParam);
     }
 
     /**
@@ -106,15 +94,7 @@ public class ShortLinkController {
      */
     @GetMapping("/api/short-link/admin/v1/stats/access-record")
     public Result<Page<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
-        return shortLinkActualRemoteService.shortLinkStatsAccessRecord(
-                requestParam.getGid(),
-                requestParam.getFullShortUrl(),
-                requestParam.getStartDate(),
-                requestParam.getEndDate(),
-                requestParam.getEnableStatus(),
-                requestParam.getCurrent(),
-                requestParam.getSize()
-                );
+        return shortLinkActualRemoteService.shortLinkStatsAccessRecord(requestParam);
     }
 
     /**
@@ -122,13 +102,7 @@ public class ShortLinkController {
      */
     @GetMapping("/api/short-link/admin/v1/stats/access-record/group")
     public Result<Page<ShortLinkStatsAccessRecordRespDTO>> groupShortLinkStatsAccessRecord(ShortLinkGroupStatsAccessRecordReqDTO requestParam) {
-        return shortLinkActualRemoteService.groupShortLinkStatsAccessRecord(
-                requestParam.getGid(),
-                requestParam.getStartDate(),
-                requestParam.getEndDate(),
-                requestParam.getCurrent(),
-                requestParam.getSize()
-                );
+        return shortLinkActualRemoteService.groupShortLinkStatsAccessRecord(requestParam);
     }
 
 

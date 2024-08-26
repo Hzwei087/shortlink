@@ -9,6 +9,8 @@ import com.nageoffer.shortlink.admin.dto.resp.ShortLinkBatchCreateRespDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.*;
 import com.nageoffer.shortlink.admin.remote.dto.resp.*;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.cloud.openfeign.SpringQueryMap;
+import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,17 +36,9 @@ public interface ShortLinkActualRemoteService {
 
     /**
      * 分页查询短链接
-     * @param gid
-     * @param orderTag
-     * @param current
-     * @param size
-     * @return
      */
     @GetMapping("/api/short-link/v1/page")
-    Result<Page<ShortLinkPageRespDTO>> pageShortLink(@RequestParam("gid") String gid,
-                                                     @RequestParam("orderTag") String orderTag,
-                                                     @RequestParam("current") Long current,
-                                                     @RequestParam("size") Long size);
+    Result<Page<ShortLinkPageRespDTO>> pageShortLink(@SpringQueryMap ShortLinkPageReqDTO requestParam);
 
     /**
      * 查询分组内短链接数量
@@ -77,9 +71,7 @@ public interface ShortLinkActualRemoteService {
      * 分页查询回收站中的短链接
      */
     @GetMapping("/api/short-link/v1/recycle-bin/page")
-    Result<Page<ShortLinkPageRespDTO>> pageRecycleBinShortLink(@RequestParam("gidList") List<String> gidList,
-                                                               @RequestParam("size") Long size,
-                                                               @RequestParam("current") Long current);
+    Result<Page<ShortLinkPageRespDTO>> pageRecycleBinShortLink(@SpringQueryMap ShortLinkRecycleBinPageReqDTO requestParam);
     /**
      * 恢复回收站中的短链接
      */
@@ -97,39 +89,23 @@ public interface ShortLinkActualRemoteService {
      * 访问单个短链接指定时间内监控数据
      */
     @GetMapping("/api/short-link/v1/stats")
-    Result<ShortLinkStatsRespDTO> oneShortLinkStats(@RequestParam("fullShortUrl") String fullShortUrl,
-                                                 @RequestParam("gid") String gid,
-                                                 @RequestParam("enableStatus") Integer enableStatus,
-                                                 @RequestParam("endDate") String endDate,
-                                                 @RequestParam("startDate") String startDate);
+    Result<ShortLinkStatsRespDTO> oneShortLinkStats(@SpringQueryMap ShortLinkStatsReqDTO requestParam);
 
     /**
      * 访问分组内所有短链接指定时间内监控数据
      */
     @GetMapping("/api/short-link/v1/stats/group")
-    Result<ShortLinkStatsRespDTO> groupShortLinkStats(@RequestParam("gid") String gid,
-                                                      @RequestParam("endDate") String endDate,
-                                                      @RequestParam("startDate") String startDate);
+    Result<ShortLinkStatsRespDTO> groupShortLinkStats(@SpringQueryMap ShortLinkGroupStatsReqDTO requestParam);
 
     /**
      * 访问单个短链接指定时间内访问日志
      */
     @GetMapping("/api/short-link/v1/stats/access-record")
-    Result<Page<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(@RequestParam("gid") String gid,
-                                                                                @RequestParam("fullShortUrl") String fullShortUrl,
-                                                                                @RequestParam("startDate") String startDate,
-                                                                                @RequestParam("endDate") String endDate,
-                                                                                @RequestParam("enableStatus") Integer enableStatus,
-                                                                                @RequestParam("current") Long current,
-                                                                                @RequestParam("size") Long size);
+    Result<Page<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(@SpringQueryMap ShortLinkStatsAccessRecordReqDTO requestParam);
 
     /**
      * 分页查询分组内所有短链接指定时间内访问日志
      */
     @GetMapping("/api/short-link/v1/stats/access-record/group")
-    Result<Page<ShortLinkStatsAccessRecordRespDTO>> groupShortLinkStatsAccessRecord(@RequestParam("gid") String gid,
-                                                                                    @RequestParam("startDate") String startDate,
-                                                                                    @RequestParam("endDate") String endDate,
-                                                                                    @RequestParam("current") Long current,
-                                                                                    @RequestParam("size") Long size);
+    Result<Page<ShortLinkStatsAccessRecordRespDTO>> groupShortLinkStatsAccessRecord(@SpringQueryMap ShortLinkGroupStatsAccessRecordReqDTO requestParam);
 }

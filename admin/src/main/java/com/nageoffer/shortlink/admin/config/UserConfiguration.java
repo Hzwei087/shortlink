@@ -17,10 +17,10 @@ public class UserConfiguration {
      * 用户信息传递过滤器
      */
     @Bean
-    public FilterRegistrationBean<UserTransmitFilter> globalUserTransmitFilter(StringRedisTemplate stringRedisTemplate) {
+    public FilterRegistrationBean<UserTransmitFilter> globalUserTransmitFilter() {
         FilterRegistrationBean<UserTransmitFilter> registration = new FilterRegistrationBean<>();
         //注册过滤器，类型为UserTransmitFilter
-        registration.setFilter(new UserTransmitFilter(stringRedisTemplate));
+        registration.setFilter(new UserTransmitFilter());
         //设置过滤器，创建一个UserTransmitFilter实例，并设置进过滤器
         registration.addUrlPatterns("/*");
         registration.setOrder(0);
