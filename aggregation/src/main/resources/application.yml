@@ -6,7 +6,7 @@ spring:
     name: short-link-aggregation
   datasource:
     driver-class-name: org.apache.shardingsphere.driver.ShardingSphereDriver
-    url: jdbc:shardingsphere:classpath:shardingsphere-config-${database.env:dev}.yaml
+    url: jdbc:shardingsphere:classpath:shardingsphere-config-${database.env:dev}.yml
   data:
     redis:
       host: 127.0.0.1
@@ -33,7 +33,7 @@ short-link:
     default: nurl.ink:8003
   stats:
     locale:
-      amap-key: 824c511f0997586ea016f979fdb23087
+      amap-key: 6bcea25e49d09a5d9544c967b57a5ab3
   goto-domain:
     white-list:
       enable: true
@@ -43,6 +43,17 @@ short-link:
         - zhihu.com
         - juejin.cn
         - cnblogs.com
+
+rocketmq:
+  name-server: common-rocketmq-dev.magestack.cn:9876
+  producer:
+    group: short-link_project-service_stats-save_pg_flyday
+    topic: short-link_project-service_topic_flyday
+    send-message-timeout: 2000
+    retry-times-when-send-failed: 1
+    retry-times-when-send-async-failed: 1
+  consumer:
+    group: short-link_project-service_stats-save_cg_flyday
 
 mybatis-plus:
   configuration:

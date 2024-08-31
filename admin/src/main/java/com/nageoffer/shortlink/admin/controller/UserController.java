@@ -97,7 +97,7 @@ public class UserController {
      * @param token
      * @return
      */
-    @DeleteMapping("/api/short-link/admin/v1/user/log-out")
+    @DeleteMapping("/api/short-link/admin/v1/user/logout")
     public Result<Void> logOut(@RequestParam("username") String username, @RequestParam("token") String token){
         userService.logOut(username, token);
         return Results.success();

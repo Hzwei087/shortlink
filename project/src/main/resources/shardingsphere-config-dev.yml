@@ -23,10 +23,6 @@ rules:
             shardingColumn: gid
             shardingAlgorithmName: link_table_hash_mod
     shardingAlgorithms:
-      link_stats_table_hash_mod:
-        type: HASH_MOD
-        props:
-          sharding-count: 16
       link_goto_table_hash_mod:
         type: HASH_MOD
         props:
