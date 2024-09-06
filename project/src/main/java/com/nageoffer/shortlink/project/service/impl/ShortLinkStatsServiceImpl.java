@@ -45,6 +45,7 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
     public ShortLinkStatsRespDTO oneShortLinkStats(ShortLinkStatsReqDTO requestParam) {
 //        checkGroupBelongToUser(requestParam.getGid());
         //通过短链接查询该短链接在所定义时间区间内各日的pv,uv,uip
+        requestParam.setEnableStatus(0);
         List<LinkAccessStatsDO> listStatsByShortLink = linkAccessStatsMapper.listStatsByShortLink(requestParam);
         if (CollUtil.isEmpty(listStatsByShortLink)) {
             return null;
@@ -55,10 +56,16 @@ public class ShortLinkStatsServiceImpl implements ShortLinkStatsService {
 
         // 基础访问详情
         List<ShortLinkStatsAccessDailyRespDTO> daily = new ArrayList<>();
-        List<String> rangeDates = DateUtil.rangeToList(DateUtil.parse(requestParam.getStartDate()), DateUtil.parse(requestParam.getEndDate()), DateField.DAY_OF_MONTH).stream()
+        List<String> rangeDates = DateUtil.rangeToList(
+                        DateUtil.parse(requestParam.getStartDate()),
+                        DateUtil.parse(requestParam.getEndDate()),
+                        DateField.DAY_OF_MONTH
+                ).stream()
                 .map(DateUtil::formatDate)
                 .toList();
-        //这段代码使用了 Hutool 库中的 DateUtil 类来生成一个日期范围的列表，并将其格式化为字符串列表。具体地说，它从 requestParam 对象中获取开始日期和结束日期，生成这两个日期之间所有天数的日期列表，然后将每个日期格式化为字符串，并最终返回一个字符串列表。
+        //这段代码使用了 Hutool 库中的 DateUtil 类来生成一个日期范围的列表，并将其格式化为字符串列表。
+        // 具体地说，它从 requestParam 对象中获取开始日期和结束日期，生成这两个日期之间所有天数的日期列表，
+        // 然后将每个日期格式化为字符串，并最终返回一个字符串列表。
         rangeDates.forEach(each -> listStatsByShortLink.stream()
                 .filter(item -> Objects.equals(each, DateUtil.formatDate(item.getDate())))
                 .findFirst()

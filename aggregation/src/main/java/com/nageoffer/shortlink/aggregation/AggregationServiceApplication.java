@@ -9,8 +9,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  */
 @SpringBootApplication(scanBasePackages = {
         "com.nageoffer.shortlink.admin",
-        "com.nageoffer.shortlink.project",
-        "com.nageoffer.shortlink.aggregation"
+        "com.nageoffer.shortlink.project"
 })
 @EnableDiscoveryClient
 public class AggregationServiceApplication {

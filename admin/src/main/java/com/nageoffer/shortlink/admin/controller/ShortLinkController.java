@@ -73,39 +73,6 @@ public class ShortLinkController {
         return Results.success();
     }
 
-    /**
-     * 访问单个短链接指定时间内监控数据
-     */
-    @GetMapping("/api/short-link/admin/v1/stats")
-    public Result<ShortLinkStatsRespDTO> shortLinkStats(ShortLinkStatsReqDTO requestParam) {
-        return shortLinkActualRemoteService.oneShortLinkStats(requestParam);
-    }
-
-    /**
-     * 访问分组内所有短链接指定时间内监控数据
-     */
-    @GetMapping("/api/short-link/admin/v1/stats/group")
-    public Result<ShortLinkStatsRespDTO> groupShortLinkStats(ShortLinkGroupStatsReqDTO requestParam) {
-        return shortLinkActualRemoteService.groupShortLinkStats(requestParam);
-    }
-
-    /**
-     * 访问单个短链接指定时间内的访问日志
-     */
-    @GetMapping("/api/short-link/admin/v1/stats/access-record")
-    public Result<Page<ShortLinkStatsAccessRecordRespDTO>> shortLinkStatsAccessRecord(ShortLinkStatsAccessRecordReqDTO requestParam) {
-        return shortLinkActualRemoteService.shortLinkStatsAccessRecord(requestParam);
-    }
-
-    /**
-     * 分页查询分组内所有短链接指定时间内访问日志
-     */
-    @GetMapping("/api/short-link/admin/v1/stats/access-record/group")
-    public Result<Page<ShortLinkStatsAccessRecordRespDTO>> groupShortLinkStatsAccessRecord(ShortLinkGroupStatsAccessRecordReqDTO requestParam) {
-        return shortLinkActualRemoteService.groupShortLinkStatsAccessRecord(requestParam);
-    }
-
-
 
 
 

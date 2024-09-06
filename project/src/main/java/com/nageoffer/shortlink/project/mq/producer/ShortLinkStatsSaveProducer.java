@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.nageoffer.shortlink.project.common.constant.RedisKeyConstant.SHORT_LINK_STATS_STREAM_TOPIC_KEY;
 
 /**
  * 短链接监控状态保存消息队列生产者

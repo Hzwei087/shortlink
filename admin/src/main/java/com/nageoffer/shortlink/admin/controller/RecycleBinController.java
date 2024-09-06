@@ -9,6 +9,7 @@ import com.nageoffer.shortlink.admin.dto.req.RecycleBinRecoverReqDTO;
 import com.nageoffer.shortlink.admin.dto.req.RecycleBinSaveReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.req.ShortLinkRecycleBinPageReqDTO;
 import com.nageoffer.shortlink.admin.remote.dto.resp.ShortLinkPageRespDTO;
+import com.nageoffer.shortlink.admin.service.RecycleBinService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,6 +21,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class RecycleBinController {
 
     private final ShortLinkActualRemoteService shortLinkActualRemoteService;
+
+    private final RecycleBinService recycleBinService;
 
     /**
      * 短链接移入回收站
@@ -37,7 +40,7 @@ public class RecycleBinController {
      */
     @GetMapping("/api/short-link/admin/v1/recycle-bin/page")
     public Result<Page<ShortLinkPageRespDTO>> pageRecycleShortLink(ShortLinkRecycleBinPageReqDTO requestParam) {
-        return shortLinkActualRemoteService.pageRecycleBinShortLink(requestParam);
+        return recycleBinService.pageRecycleShortLink(requestParam);
     }
     /**
      *

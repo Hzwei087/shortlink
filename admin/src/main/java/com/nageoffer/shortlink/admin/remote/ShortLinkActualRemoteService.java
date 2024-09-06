@@ -20,6 +20,7 @@ import java.util.List;
 @FeignClient(value = "short-link-project", url = "${aggregation.remote-url}")
 //, url = "${aggregation.remote-url}"
 public interface ShortLinkActualRemoteService {
+
     /**
      * 创建短链接
      * @param requestParam
@@ -61,6 +62,7 @@ public interface ShortLinkActualRemoteService {
     void updateShortLink(@RequestBody ShortLinkUpdateReqDTO requestParam);
 
 
+
     /**
      * 短链接转移入回收站
      */
@@ -72,6 +74,7 @@ public interface ShortLinkActualRemoteService {
      */
     @GetMapping("/api/short-link/v1/recycle-bin/page")
     Result<Page<ShortLinkPageRespDTO>> pageRecycleBinShortLink(@SpringQueryMap ShortLinkRecycleBinPageReqDTO requestParam);
+
     /**
      * 恢复回收站中的短链接
      */
@@ -84,6 +87,8 @@ public interface ShortLinkActualRemoteService {
      */
     @PostMapping("/api/short-link/v1/recycle-bin/remove")
     void removeRecycleBin(@RequestBody RecycleBinRemoveReqDTO requestParam);
+
+
 
     /**
      * 访问单个短链接指定时间内监控数据
