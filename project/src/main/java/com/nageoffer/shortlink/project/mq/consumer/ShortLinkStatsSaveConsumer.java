@@ -63,7 +63,7 @@ public class ShortLinkStatsSaveConsumer implements RocketMQListener<Map<String, 
     @Override
     public void onMessage(Map<String, String> producerMap) {
         String keys = producerMap.get("keys");
-        if (messageQueueIdempotentHandler.isMessageProcessed(keys)){
+        if (messageQueueIdempotentHandler.isMessageBeingConsumed(keys)){
             if (messageQueueIdempotentHandler.isAccomplish(keys)) {
                 return;
             }
@@ -191,8 +191,6 @@ public class ShortLinkStatsSaveConsumer implements RocketMQListener<Map<String, 
                     .date(currentDate)
                     .build();
             linkStatsTodayMapper.shortLinkTodayState(linkStatsTodayDO);
-        } catch (Throwable ex) {
-            log.error("短链接访问量统计异常", ex);
         } finally {
             rLock.unlock();
         }

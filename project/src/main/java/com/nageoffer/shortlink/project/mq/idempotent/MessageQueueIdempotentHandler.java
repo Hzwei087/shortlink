@@ -43,9 +43,11 @@ public class MessageQueueIdempotentHandler {
      * @param messageId 消息唯一标识
      * @return 消息是否消费过
      */
-    public boolean isMessageProcessed(String messageId) {
+    public boolean isMessageBeingConsumed(String messageId) {
         String key = IDEMPOTENT_KEY_PREFIX + messageId;
-        return Boolean.TRUE.equals(stringRedisTemplate.opsForValue().setIfAbsent(key, "1", 2, TimeUnit.MINUTES));
+        return Boolean.FALSE.equals(stringRedisTemplate.opsForValue().setIfAbsent(key, "0", 2, TimeUnit.MINUTES));
+        //如果这个键在 Redis 中不存在，它会创建该键，并设置值为 "0"，并且设置这个键的过期时间为 2 分钟。
+        //如果该键已经存在，setIfAbsent 返回 false，表示这个消息之前已经被消费过。
     }
 
     /**

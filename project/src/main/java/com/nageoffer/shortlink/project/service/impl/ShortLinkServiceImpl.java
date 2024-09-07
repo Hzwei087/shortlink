@@ -243,7 +243,7 @@ public class ShortLinkServiceImpl extends ServiceImpl<ShortLinkMapper, ShortLink
                     .domain(hasShortLinkDO.getDomain())
                     .shortUri(hasShortLinkDO.getShortUri())
                     .clickNum(hasShortLinkDO.getClickNum())
-                    .favicon(hasShortLinkDO.getFavicon())
+                    .favicon(Objects.equals(requestParam.getOriginUrl(), hasShortLinkDO.getOriginUrl()) ? hasShortLinkDO.getFavicon() : getFavicon(requestParam.getOriginUrl()))
                     .createdType(hasShortLinkDO.getCreatedType())
                     .gid(requestParam.getGid())
                     .originUrl(requestParam.getOriginUrl())
