@@ -10,11 +10,11 @@ public class UsertableShardingTest {
             "    PRIMARY KEY (`id`),\n" +
             "    UNIQUE KEY `idx_full_short_url` (`full_short_url`) USING BTREE\n" +
             ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
-    public static final String DROPSQL = "DROP table t_link_goto_%d;";
+    public static final String DROPSQL = "DROP table t_group_%d;";
 
     public static void main(String[] args) {
         for (int i = 0; i < 16; i++) {
-            System.out.println(String.format(SQL,i));
+            System.out.println(String.format(DROPSQL,i));
 
         }
 
