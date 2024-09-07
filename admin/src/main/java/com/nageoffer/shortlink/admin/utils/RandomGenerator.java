@@ -4,7 +4,7 @@ import java.security.SecureRandom;
 /**
  * 分组ID随机生成器
  */
-public final class RandomStringUtil {
+public final class RandomGenerator {
 
     // 字符集，包括数字和英文字母
     private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -12,7 +12,7 @@ public final class RandomStringUtil {
 
 
     public static String generateRandom(){
-        return generateRandomString(6);
+        return generateRandom(6);
     }
 
     /**
@@ -20,7 +20,7 @@ public final class RandomStringUtil {
      * @param length 字符串长度
      * @return 随机字符串
      */
-    public static String generateRandomString(int length) {
+    public static String generateRandom(int length) {
         StringBuilder result = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
             int index = RANDOM.nextInt(CHARACTERS.length());
